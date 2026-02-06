@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Para você 💛</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div class="glow"></div>
+      <h1>Feliz aniversário, <span id="herName">meu amor</span> 💛</h1>
+      <p class="sub">
+        Eu fiz isso pra você — uma coisinha que abre devagar… igual as melhores coisas da vida.
+        <br/>Sem respostas, sem pressão. Só você descobrindo.
+      </p>
+    </div>
+
+    <!-- STEP 1 -->
+    <section class="step" id="step1">
+      <div class="stepHead">
+        <div class="title">
+          <b>1) Encontre o coração</b>
+          <span>Toque na tela… e preste atenção no que “responde”.</span>
+        </div>
+        <div class="badge" id="b1">🔒 Trancado</div>
+      </div>
+      <div class="content">
+        <div class="heartField" id="heartField" aria-label="Área interativa">
+          <div class="pulse" id="pulse"></div>
+          <div class="spark" id="spark"></div>
+        </div>
+
+        <div class="hint">
+          Dica: quando você estiver perto… vai parecer que a tela está “viva”.
+        </div>
+
+        <div class="reveal" id="reveal1">
+          <img id="photo1" alt="Foto 1" src="https://images.unsplash.com/photo-1520975958225-2ad2f74b9b01?auto=format&fit=crop&w=1200&q=80" />
+          <div class="cap" id="cap1">
+            <b>Você é minha paz e minha bagunça boa.</b><br/>
+            E eu adoro como tudo fica mais leve quando é com você.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <button class="btn locked" id="to2" disabled>Continuar →</button>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step locked" id="step2" aria-disabled="true">
+      <div class="stepHead">
+        <div class="title">
+          <b>2) Junte os fragmentos</b>
+          <span>Arraste as peças e deixe elas pertinho uma da outra.</span>
+        </div>
+        <div class="badge" id="b2">🔒 Trancado</div>
+      </div>
+      <div class="content">
+        <div class="board" id="board">
+          <div class="ghostText">As peças querem se encontrar. Só aproxima… 💛</div>
+
+          <div class="piece" id="p1"></div>
+          <div class="piece" id="p2"></div>
+          <div class="piece" id="p3"></div>
+
+          <div class="assembled" id="assembled">
+            <img id="photo2" alt="Foto 2" src="https://images.unsplash.com/photo-1529634898884-7a0c0f2a11f6?auto=format&fit=crop&w=1200&q=80" />
+            <div class="overlay" id="cap2">
+              <b>Eu guardo você em detalhes.</b><br/>
+              Nos dias bons, nos dias difíceis, e principalmente nos dias comuns.
+            </div>
+          </div>
+        </div>
+
+        <div class="hint">
+          Dica: quando as 3 estiverem bem perto… acontece.
+        </div>
+
+        <div class="divider"></div>
+        <button class="btn locked" id="to3" disabled>Ir pro último →</button>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step locked" id="step3" aria-disabled="true">
+      <div class="stepHead">
+        <div class="title">
+          <b>3) Trava do tempo</b>
+          <span>Segura um pouquinho…</span>
+        </div>
+        <div class="badge" id="b3">🔒 Trancado</div>
+      </div>
+      <div class="content">
+        <div class="holdWrap">
+          <div class="holdBtn" id="holdBtn">
+            <div class="bar" id="bar"></div>
+            <div class="holdText" id="holdText">Pressione e segure 💛</div>
+          </div>
+          <div class="small">(prometo que vale a pena)</div>
+        </div>
+
+        <div class="final" id="final">
+          <img id="photo3" alt="Foto final" src="https://images.unsplash.com/photo-1520975682031-a80a56b7b9f5?auto=format&fit=crop&w=1200&q=80" />
+          <div class="letter" id="letter"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
