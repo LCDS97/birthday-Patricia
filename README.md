@@ -1,236 +1,234 @@
-💛 Birthday Interactive Experience
+# 💛 Birthday Interactive Experience
 
-A small, mobile-first interactive web experience built as a birthday gift.
-It uses three progressive interactions (no quizzes, no right/wrong answers) to unlock content step by step.
+A small, mobile-first interactive web experience built as a birthday gift.  
+It uses **three progressive interactions** (no quizzes, no right/wrong answers) to unlock content step by step.
 
 Designed to be:
+- Simple to host (static files)
+- Easy to tweak later
+- Friendly for touch devices
+- Emotion-driven, not logic-driven
 
-Simple to host (static files)
+---
 
-Easy to tweak later
+## 📁 Project Structure
 
-Friendly for touch devices
-
-Emotion-driven, not logic-driven
-
-📁 Project Structure
+```
 /birthday
   ├─ index.html   # Markup / structure
   ├─ style.css    # Visual styling
   └─ app.js       # All interaction logic
+```
 
-
-This is a pure HTML + CSS + JavaScript project.
+This is a **pure HTML + CSS + JavaScript** project.  
 No frameworks, no build step.
 
-🚀 How to Run
-Local
+---
 
-Just open index.html in a browser.
+## 🚀 How to Run
 
-GitHub Pages
+### Local
+Open `index.html` in a browser.
 
-Push this repo to GitHub
+### GitHub Pages
+1. Push the repo to GitHub
+2. Go to **Settings → Pages**
+3. Source: `main` branch → `/root`
+4. Save
+5. Your site will be available at:
 
-Go to Settings → Pages
-
-Source: main branch → /root
-
-Save
-
-Access via:
-
+```
 https://<your-username>.github.io/<repo-name>/
+```
 
-🧠 High-Level Flow
+---
 
-The experience is split into 3 steps.
-Each step unlocks the next one.
+## 🧠 High-Level Flow
 
+The experience is split into **3 steps**.  
+Each step unlocks the next one:
+
+```
 Step 1 → Step 2 → Step 3 → Final message
-
+```
 
 No step requires typing or “knowing the right answer”.
 
-🧩 STEP 1 — Find the Heart
+---
 
-Location: app.js → STEP 1
+## 🧩 Step 1 — Find the Heart
 
-What it does
+**Code location:** `app.js` → `STEP 1`
 
-Defines an invisible hotspot inside the heart area
+### What it does
+- Defines an invisible hotspot inside the heart area.
+- As the user touches/moves near it, the pulse becomes stronger.
+- If the touch is close enough, Step 1 completes.
 
-As the user touches/moves near it:
+### Key settings
+```js
+const hotspot = { x: 0.72, y: 0.58 }; // position inside the heart field (0..1)
+const HOT_RADIUS = 52;               // how close the touch must be (pixels)
+```
 
-A pulse animation becomes stronger
-
-When the touch is close enough, Step 1 is completed
-
-Core logic
-const hotspot = { x: 0.72, y: 0.58 }; // % of container
-const HOT_RADIUS = 52;               // px
-
-Completion condition
+### Success condition
+```js
 distance(touchPoint, hotspot) < HOT_RADIUS
+```
 
-What unlocks
+### What unlocks
+- Shows the first image + text
+- Enables Step 2
+- Updates UI badge
 
-Reveals first photo + text
+---
 
-Enables Step 2
+## 🧩 Step 2 — Join the Fragments (Cluster-Based)
 
-Updates UI badges
+**Code location:** `app.js` → `STEP 2 (CLUSTER MODE)`
 
-🧩 STEP 2 — Join the Fragments (Cluster-Based)
+### What it does
+- Shows 3 draggable pieces (image fragments).
+- User drags them freely.
+- There are **no target spots**.
+- When the 3 pieces are **close to each other**, it completes.
 
-Location: app.js → STEP 2 (CLUSTER MODE)
+This is designed to match the simple behavior:
+> “Bring the pieces together.”
 
-What it does
+### How it decides “close enough”
+1. Compute the center point of each piece.
+2. Compute distances between every pair.
+3. Take the **maximum** distance.
+4. If that maximum distance is below a threshold, it succeeds.
 
-Displays 3 draggable blocks (image fragments)
-
-User can drag them freely
-
-No target positions
-
-When all 3 blocks are close to each other, the step completes
-
-Why cluster-based
-
-This avoids:
-
-Precision placement
-
-Invisible targets
-
-Frustration on mobile
-
-It matches the mental model:
-
-“Bring them together.”
-
-Core logic
-
-Calculate the center of each block
-
-Measure the distance between every pair
-
-Take the maximum distance
-
-If that distance is below a threshold → success
-
+### Key setting
+```js
 const CLUSTER_DIST = pieceWidth * 0.85;
+```
 
+- Increase it to make Step 2 easier.
+- Decrease it to make it harder.
 
-Increase this value to make it easier
-Decrease it to require tighter grouping
+Examples:
+- `0.60` = tighter cluster required
+- `0.85` = very forgiving on mobile (recommended)
 
-Completion condition
+### Success condition
+```js
 maxDistanceBetweenCenters <= CLUSTER_DIST
+```
 
-What unlocks
+### What unlocks
+- Shows the assembled image
+- Hides the draggable pieces
+- Enables Step 3
+- Updates UI badge
 
-Shows full assembled image
+---
 
-Hides draggable pieces
+## 🧩 Step 3 — Hold to Unlock (Time-Based)
 
-Enables Step 3
+**Code location:** `app.js` → `STEP 3`
 
-🧩 STEP 3 — Hold to Unlock (Time-Based)
+### What it does
+- User presses and holds a button.
+- A progress bar fills over time.
+- If the user releases early, it resets.
+- If they hold long enough, it unlocks the final content.
 
-Location: app.js → STEP 3
+### Key setting
+```js
+const HOLD_MS = 3200; // milliseconds required holding
+```
 
-What it does
-
-User presses and holds a button
-
-A progress bar fills over time
-
-Releasing early cancels the action
-
-Core logic
-const HOLD_MS = 3200; // milliseconds
-
-
-Progress is calculated with requestAnimationFrame for smoothness.
-
-Completion condition
+### Success condition
+```js
 heldTime >= HOLD_MS
+```
 
-What unlocks
+### What unlocks
+- Shows final image + letter
+- Updates UI badge
+- Optional vibration feedback on mobile (if supported)
 
-Final photo
+---
 
-Letter / message
+## ✏️ Customization Guide
 
-Optional vibration feedback (mobile)
-
-✏️ Customization Guide
-Change name
+### Change her name
+In `app.js`:
+```js
 config.herName = "Maria";
+```
 
-Replace photos
+### Replace photos
+In `app.js`, set direct HTTPS image URLs:
+```js
 config.photo1 = "https://...";
 config.photo2 = "https://...";
 config.photo3 = "https://...";
+```
 
-Change texts
-config.cap1
-config.cap2
-config.letterHTML
+Tip: Use stable links (GitHub raw, Imgur direct, Cloudinary, etc).  
+Avoid links that require login or expire.
 
-Make Step 2 easier / harder
-const CLUSTER_DIST = pieceWidth * 0.85;
+### Change captions and letter
+In `app.js`:
+```js
+config.cap1 = "...";
+config.cap2 = "...";
+config.letterHTML = `...`;
+```
 
+---
 
-0.60 → tighter
+## 🔧 Tuning & Troubleshooting
 
-0.85 → very forgiving (recommended for mobile)
+### Step 1 feels too hard
+Increase `HOT_RADIUS`:
+```js
+const HOT_RADIUS = 70;
+```
 
-Move the heart hotspot (Step 1)
-const hotspot = { x: 0.72, y: 0.58 };
+### Step 2 doesn’t unlock easily
+Increase cluster threshold:
+```js
+const CLUSTER_DIST = pieceWidth * 0.95;
+```
 
+### Pieces look blank / image not showing in Step 2
+Step 2 pieces use the same image as `photo2`.  
+If `photo2` fails to load, fragments can look empty.
 
-Values are percentages of the container (0–1).
+Check:
+- `config.photo2` is a valid HTTPS direct image link
+- the server allows hotlinking (some do not)
 
-🧪 Debugging Tips
+---
 
-Open DevTools → Console
+## ✅ Deployment Checklist
 
-Drag pieces slowly to see behavior
+Before sending to her:
+- [ ] Replace `config.photo1`, `config.photo2`, `config.photo3` with real image URLs
+- [ ] Replace `config.herName`
+- [ ] Update the final “present” text in `letterHTML`
+- [ ] Test on your phone (touch + drag + hold)
+- [ ] Publish on GitHub Pages and open the link on mobile
 
-Resize screen to test responsiveness
+---
 
-Test on real mobile device (important for touch behavior)
+## 🔒 Notes
 
-🔒 Notes / Constraints
+- No tracking, no backend, no data saved.
+- Reloading the page resets progress.
+- Works offline if images are also local.
 
-Mobile-first (touch events prioritized)
+---
 
-No external libraries
+## 💡 Future Ideas
 
-Works offline
-
-No data persistence (reload resets progress)
-
-💡 Future Ideas
-
-Confetti animation on final unlock
-
-Sound feedback on interactions
-
-More fragments in Step 2
-
-Multiple “chapters” instead of linear steps
-
-🖤 Why This Exists
-
-This project was built to:
-
-Feel personal, not gamified
-
-Avoid “right/wrong” mechanics
-
-Be easy to evolve over time
-
-Blend emotion + interaction without overengineering
+- Add confetti on final unlock
+- Add sound effects (soft clicks / sparkle)
+- Use more fragments (5–9 pieces)
+- Add a “replay” button at the end
