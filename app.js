@@ -113,6 +113,8 @@ to2.addEventListener("click", ()=> {
 });
 
 // ================= STEP 2 (CLUSTER MODE) =================
+// ================= STEP 2 (SNAP MODE + DEBUG) =================
+// ================= STEP 2 (CLUSTER + REAL CONTACT + DEBUG) =================
 const board = $("board");
 const assembled = $("assembled");
 const b2 = $("b2");
@@ -121,34 +123,29 @@ const pieceEls = [ $("p1"), $("p2"), $("p3") ];
 
 let step2Done = false;
 
-const bgUrl = () => $("photo2").src;
+// ======= SETTINGS =======
+const DEBUG_STEP2 = false;
 
-function layoutPieces(){
-  const r = board.getBoundingClientRect();
-  const placeImages = [config.block1, config.block2, config.block3];
+// distância máxima (entre centros) para considerar "juntos"
+const CLUSTER_FACTOR = 0.10; // menor = precisa ficar mais colado | 0.55-0.65 bom
 
-  const starts = [
-    { x: 0.06, y: 0.08 },
-    { x: 0.56, y: 0.08 },
-    { x: 0.32, y: 0.64 }
-  ];
-  pieceEls.forEach((el,i)=>{
-    el.style.left = (starts[i].x * r.width) + "px";
-    el.style.top  = (starts[i].y * r.height) + "px";
+// contato real: quanto de overlap (interseção) mínima entre pares
+// 0.02 = 2% de área do menor retângulo (bem leve), 0.05 = mais exigente
+const MIN_OVERLAP_RATIO = 0.04;
 
-    el.style.backgroundImage = `url(${placeImages[i]})`;
-    el.style.backgroundSize = "cover";
-    el.style.backgroundPosition = "center";
+// quantos pares precisam ter contato real
+// 2 = suficiente para formar um "cluster" (A encosta B e B encosta C)
+// 3 = todos encostam em todos (muito difícil)
+const REQUIRED_TOUCHING_PAIRS = 2;
 
-    const bx = (i===0? "0%" : i===1? "55%" : "30%");
-    const by = (i===0? "10%" : i===1? "20%" : "70%");
-    el.style.backgroundPosition = `${bx} ${by}`;
-    el.style.backgroundSize = "250% 250%";
-  });
+// ======= DEBUG HELPERS =======
+function logGroup(title, fn){
+  if(!DEBUG_STEP2) return;
+  console.groupCollapsed(title);
+  try { fn && fn(); } finally { console.groupEnd(); }
 }
-
-window.addEventListener("resize", ()=> { if(!step2Done) layoutPieces(); });
-layoutPieces();
+function fmt(n){ return Number.isFinite(n) ? n.toFixed(1) : String(n); }
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
 function getPoint(ev){
   const t = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
@@ -156,72 +153,156 @@ function getPoint(ev){
   return { x: t.clientX - r.left, y: t.clientY - r.top };
 }
 
+function rectInBoard(el){
+  const r = el.getBoundingClientRect();
+  const br = board.getBoundingClientRect();
+  return {
+    left: r.left - br.left,
+    top:  r.top  - br.top,
+    right: (r.left - br.left) + r.width,
+    bottom:(r.top  - br.top) + r.height,
+    width: r.width,
+    height: r.height
+  };
+}
+
+function centerOf(el){
+  const rr = rectInBoard(el);
+  return { x: rr.left + rr.width/2, y: rr.top + rr.height/2 };
+}
+
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+function overlapArea(r1, r2){
+  const xOverlap = Math.max(0, Math.min(r1.right, r2.right) - Math.max(r1.left, r2.left));
+  const yOverlap = Math.max(0, Math.min(r1.bottom, r2.bottom) - Math.max(r1.top, r2.top));
+  return xOverlap * yOverlap;
+}
+
+function overlapRatio(r1, r2){
+  const area = overlapArea(r1, r2);
+  const minArea = Math.min(r1.width*r1.height, r2.width*r2.height);
+  if(minArea <= 0) return 0;
+  return area / minArea;
+}
+
+// ======= OPTIONAL DEBUG: draw cluster circle =======
+function ensureDebugOverlay(){
+  if(!DEBUG_STEP2) return null;
+  let el = document.getElementById("clusterDebug");
+  if(el) return el;
+
+  el = document.createElement("div");
+  el.id = "clusterDebug";
+  el.style.position = "absolute";
+  el.style.inset = "0";
+  el.style.pointerEvents = "none";
+  el.style.zIndex = "2";
+  board.appendChild(el);
+
+  const ring = document.createElement("div");
+  ring.id = "clusterRing";
+  ring.style.position = "absolute";
+  ring.style.borderRadius = "999px";
+  ring.style.border = "2px dashed rgba(255,255,255,.20)";
+  ring.style.boxShadow = "0 0 0 10px rgba(124,247,255,.06)";
+  ring.style.display = "none";
+  el.appendChild(ring);
+
+  return el;
+}
+
+function drawClusterRing(cx, cy, radius){
+  if(!DEBUG_STEP2) return;
+  ensureDebugOverlay();
+  const ring = document.getElementById("clusterRing");
+  if(!ring) return;
+
+  ring.style.display = "block";
+  ring.style.left = (cx - radius) + "px";
+  ring.style.top  = (cy - radius) + "px";
+  ring.style.width = (radius*2) + "px";
+  ring.style.height = (radius*2) + "px";
+}
+
+// ======= INITIAL LAYOUT + IMAGES =======
+function layoutPieces(){
+  const r = board.getBoundingClientRect();
+  const placeImages = [config.block1, config.block2, config.block3];
+
+  // posição inicial (coloca a peça 3 mais pra cima pra aparecer melhor)
+  const starts = [
+    { x: 0.10, y: 0.12 },
+    { x: 0.62, y: 0.12 },
+    { x: 0.36, y: 0.46 } // <— sobe a peça 3
+  ];
+
+  pieceEls.forEach((el,i)=>{
+    el.style.left = (starts[i].x * r.width) + "px";
+    el.style.top  = (starts[i].y * r.height) + "px";
+
+    el.style.backgroundImage = `url(${placeImages[i]})`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    el.style.backgroundRepeat = "no-repeat";
+
+    el.dataset.touched = "false";
+    el.classList.remove("touched");
+  });
+
+  if(DEBUG_STEP2){
+    logGroup("🧩 STEP2 layoutPieces()", () => {
+      console.log("board:", fmt(r.width), "x", fmt(r.height));
+      console.log("images:", placeImages);
+    });
+  }
+}
+
+window.addEventListener("resize", ()=> { if(!step2Done) layoutPieces(); });
+layoutPieces();
+
+// ======= DRAG =======
 let drag = null;
 
 function startDrag(el, ev){
   if(step2Done) return;
   const p = getPoint(ev);
-  const rect = el.getBoundingClientRect();
-  const br = board.getBoundingClientRect();
+
   drag = {
     el,
-    offX: p.x - (rect.left - br.left),
-    offY: p.y - (rect.top  - br.top),
+    offX: p.x - el.offsetLeft,
+    offY: p.y - el.offsetTop,
   };
+
   el.style.zIndex = 10;
+
+  logGroup(`🟦 STEP2 startDrag ${el.id}`, () => {
+    console.log("start left/top:", fmt(el.offsetLeft), fmt(el.offsetTop));
+  });
 }
 
 function moveDrag(ev){
   if(!drag || step2Done) return;
+
   const p = getPoint(ev);
-  drag.el.style.left = (p.x - drag.offX) + "px";
-  drag.el.style.top  = (p.y - drag.offY) + "px";
+  const br = board.getBoundingClientRect();
+  const w = drag.el.getBoundingClientRect().width;
+  const h = drag.el.getBoundingClientRect().height;
+
+  const left = clamp(p.x - drag.offX, 0, br.width - w);
+  const top  = clamp(p.y - drag.offY, 0, br.height - h);
+
+  drag.el.style.left = left + "px";
+  drag.el.style.top  = top + "px";
 }
 
 function endDrag(){
   if(!drag || step2Done) return;
+
   drag.el.style.zIndex = 1;
   drag = null;
-  checkAssembleCluster();
-}
 
-function centerOf(el){
-  const r = el.getBoundingClientRect();
-  const br = board.getBoundingClientRect();
-  return { x:(r.left-br.left)+(r.width/2), y:(r.top-br.top)+(r.height/2) };
-}
-
-function checkAssembleCluster(){
-  // If 3 pieces are close to each other -> success
-  const active = pieceEls.filter(el => el.style.display !== "none");
-  if(active.length < 3) return;
-
-  const c1 = centerOf(active[0]);
-  const c2 = centerOf(active[1]);
-  const c3 = centerOf(active[2]);
-
-  const dist = (a,b) => Math.hypot(a.x - b.x, a.y - b.y);
-  const d12 = dist(c1,c2);
-  const d13 = dist(c1,c3);
-  const d23 = dist(c2,c3);
-  const maxDist = Math.max(d12,d13,d23);
-
-  // Threshold based on piece size (mobile-friendly)
-  const pieceW = active[0].getBoundingClientRect().width;
-  const CLUSTER_DIST = pieceW * 0.85; // make it easy like your screenshot
-
-  if(maxDist <= CLUSTER_DIST){
-    step2Done = true;
-    assembled.style.display = "block";
-    pieceEls.forEach(el => el.style.display = "none");
-    b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
-    to3.classList.remove("locked");
-    to3.disabled = false;
-
-    $("step3").classList.remove("locked");
-    $("step3").setAttribute("aria-disabled","false");
-    $("b3").textContent = "🔓 Liberado";
-  }
+  checkClusterAndUnlock();
 }
 
 // Bind drag events
@@ -229,15 +310,82 @@ pieceEls.forEach(el=>{
   el.addEventListener("touchstart", (e)=> startDrag(el,e), {passive:true});
   el.addEventListener("mousedown", (e)=> startDrag(el,e));
 });
-board.addEventListener("touchmove", (e)=> { moveDrag(e); }, {passive:true});
-board.addEventListener("mousemove", (e)=> { moveDrag(e); });
+board.addEventListener("touchmove", (e)=> moveDrag(e), {passive:true});
+board.addEventListener("mousemove", (e)=> moveDrag(e));
 board.addEventListener("touchend", ()=> endDrag(), {passive:true});
 board.addEventListener("mouseup", ()=> endDrag());
 board.addEventListener("mouseleave", ()=> endDrag());
 
-to3.addEventListener("click", ()=> {
-  document.getElementById("step3").scrollIntoView({behavior:"smooth", block:"start"});
-});
+// ======= CLUSTER + CONTACT CHECK =======
+function checkClusterAndUnlock(){
+  const active = pieceEls.filter(el => el.style.display !== "none");
+  if(active.length < 3) return;
+
+  const centers = active.map(centerOf);
+  const r0 = rectInBoard(active[0]);
+  const pieceW = r0.width;
+
+  const d01 = dist(centers[0], centers[1]);
+  const d02 = dist(centers[0], centers[2]);
+  const d12 = dist(centers[1], centers[2]);
+  const maxDist = Math.max(d01, d02, d12);
+
+  const CLUSTER_DIST = pieceW * CLUSTER_FACTOR;
+
+  // cluster center (debug ring)
+  const cx = (centers[0].x + centers[1].x + centers[2].x) / 3;
+  const cy = (centers[0].y + centers[1].y + centers[2].y) / 3;
+  drawClusterRing(cx, cy, CLUSTER_DIST);
+
+  // contact by overlap
+  const rects = active.map(rectInBoard);
+  const o01 = overlapRatio(rects[0], rects[1]);
+  const o02 = overlapRatio(rects[0], rects[2]);
+  const o12 = overlapRatio(rects[1], rects[2]);
+
+  const touchingPairs = [
+    o01 >= MIN_OVERLAP_RATIO,
+    o02 >= MIN_OVERLAP_RATIO,
+    o12 >= MIN_OVERLAP_RATIO
+  ].filter(Boolean).length;
+
+  const clusterOk = maxDist <= CLUSTER_DIST;
+  const touchOk = touchingPairs >= REQUIRED_TOUCHING_PAIRS;
+
+  logGroup("🔍 STEP2 checkClusterAndUnlock()", () => {
+    console.log("d01/d02/d12:", fmt(d01), fmt(d02), fmt(d12));
+    console.log("maxDist:", fmt(maxDist), "clusterDist:", fmt(CLUSTER_DIST), "clusterOk:", clusterOk);
+    console.log("overlap ratios o01/o02/o12:", fmt(o01), fmt(o02), fmt(o12));
+    console.log("touchingPairs:", touchingPairs, "required:", REQUIRED_TOUCHING_PAIRS, "touchOk:", touchOk);
+  });
+
+  // ✅ only unlock when BOTH are true:
+  // - they are close enough as a cluster
+  // - there is real contact between at least 2 pairs
+  if(clusterOk && touchOk){
+    unlockStep2();
+  }
+}
+
+function unlockStep2(){
+  if(step2Done) return;
+
+  step2Done = true;
+  assembled.style.display = "block";
+  pieceEls.forEach(el => el.style.display = "none");
+
+  b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+  to3.classList.remove("locked");
+  to3.disabled = false;
+
+  $("step3").classList.remove("locked");
+  $("step3").setAttribute("aria-disabled","false");
+  $("b3").textContent = "🔓 Liberado";
+
+  if(DEBUG_STEP2){
+    console.log("✅ STEP2 UNLOCKED (clusterOk + touchOk)");
+  }
+}
 
 // ================= STEP 3 =================
 const holdBtn = $("holdBtn");

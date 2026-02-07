@@ -146,18 +146,41 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   overflow:hidden;
   touch-action: none;
 }
+
+
+
+/* Base do bloco */
 .piece{
   position:absolute;
-  width: 40%;
+  width: min(52%, 210px);
   aspect-ratio: 1 / 1;
-  border-radius: 16px;
+  border-radius: 18px;
   border:1px solid #ffffff18;
-  background-size: 200% 200%;
   background-repeat:no-repeat;
+  background-size: cover;
+  background-position: center;
   box-shadow: 0 12px 30px rgba(0,0,0,.35);
   cursor: grab;
   user-select:none;
-   
+  overflow:hidden;
+  transition: left .12s ease, top .12s ease;
+}
+
+.piece.snapped{
+  outline: 2px solid #ffffff22;
+  box-shadow: 0 16px 44px rgba(0,0,0,.55);
+}
+
+
+/* Faz virar “pedaço de coração” */
+.piece.heartA{
+  clip-path: polygon(50% 12%, 22% 0%, 0% 22%, 0% 62%, 52% 52%);
+}
+.piece.heartB{
+  clip-path: polygon(50% 12%, 78% 0%, 100% 22%, 100% 62%, 48% 52%);
+}
+.piece.heartC{
+  clip-path: polygon(0% 62%, 52% 52%, 100% 62%, 50% 100%);
 }
 .piece:active{ cursor: grabbing; }
 
