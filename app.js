@@ -1,7 +1,7 @@
 // ======= CUSTOMIZE HERE =======
 const config = {
   herName: "MEU AMOR",
-  photo1: "/fotos/Step-Foto1.jpeg",
+  photo1: "./fotos/Step-Foto1.jpeg",
   photo2: "https://YOUR-PHOTO-LINK-2",
   photo3: "https://YOUR-PHOTO-LINK-3",
   // Photos from the step 2 puzzle
