@@ -133,6 +133,7 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   width:100%; height:220px; object-fit:cover; display:block;
   filter: saturate(1.05) contrast(1.02);
 }
+
 .reveal .cap{ padding: 12px; font-size:14px; line-height:1.35; }
 
 /* STEP 2 */
@@ -156,8 +157,13 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   box-shadow: 0 12px 30px rgba(0,0,0,.35);
   cursor: grab;
   user-select:none;
+   
 }
 .piece:active{ cursor: grabbing; }
+
+
+
+
 .ghostText{
   position:absolute; inset:0;
   display:flex; align-items:center; justify-content:center;

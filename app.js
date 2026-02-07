@@ -1,9 +1,13 @@
 // ======= CUSTOMIZE HERE =======
 const config = {
   herName: "MEU AMOR",
-  photo1: "https://YOUR-PHOTO-LINK-1",
+  photo1: "/fotos/Step-Foto1.jpeg",
   photo2: "https://YOUR-PHOTO-LINK-2",
   photo3: "https://YOUR-PHOTO-LINK-3",
+  // Photos from the step 2 puzzle
+  block1: "./fotos/Step2-Foto1-Bloco1.jpeg",
+  block2: "./fotos/Step2-Foto2-Bloco2.jpeg",
+  block3: "./fotos/Step2-Foto3-Bloco3.jpeg",
   cap1: "Você é minha paz e minha bagunça boa.<br/>E eu adoro como tudo fica mais leve quando é com você.",
   cap2: "Eu guardo você em detalhes.<br/>Nos dias bons, nos dias difíceis, e principalmente nos dias comuns.",
   letterHTML: `
@@ -22,7 +26,7 @@ const $ = (id) => document.getElementById(id);
 $("herName").textContent = config.herName;
 
 const safeSetImg = (el, url, fallback) => {
-  if (url && url.startsWith("http")) el.src = url;
+  if (url && url.trim() && !url.includes("YOUR-PHOTO-LINK")) el.src = url;
   else el.src = fallback;
 };
 
@@ -121,6 +125,8 @@ const bgUrl = () => $("photo2").src;
 
 function layoutPieces(){
   const r = board.getBoundingClientRect();
+  const placeImages = [config.block1, config.block2, config.block3];
+
   const starts = [
     { x: 0.06, y: 0.08 },
     { x: 0.56, y: 0.08 },
@@ -130,7 +136,10 @@ function layoutPieces(){
     el.style.left = (starts[i].x * r.width) + "px";
     el.style.top  = (starts[i].y * r.height) + "px";
 
-    el.style.backgroundImage = `url(${bgUrl()})`;
+    el.style.backgroundImage = `url(${placeImages[i]})`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+
     const bx = (i===0? "0%" : i===1? "55%" : "30%");
     const by = (i===0? "10%" : i===1? "20%" : "70%");
     el.style.backgroundPosition = `${bx} ${by}`;
