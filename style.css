@@ -376,6 +376,44 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   filter: blur(2px);
   transition: opacity .7s ease, transform .9s ease, filter .7s ease;
 }
+
+/* Step 3 - centraliza a carta */
+#step3 .letter,
+#step3 .letterReveal,
+#step3 #letterTyped{
+  text-align: center;
+  padding-top: 5px;
+}
+
+/* ===== Step 3: mesmo “card de foto” do Step 1 ===== */
+
+#step3 .final{
+  border-radius: 16px;
+  border: 1px solid #ffffff18;
+  overflow: hidden;
+  background: #00000022;
+  box-shadow: 0 18px 60px rgba(0,0,0,.45); /* opcional, se quiser igual top cards */
+}
+
+/* dá o respiro lateral igual você fez no Step 1 */
+#step3 .final{
+  padding: 14px;
+}
+
+/* a foto (container) vira um “bloco” arredondado dentro do card */
+#step3 .finalPhotos{
+  border-radius: 16px;
+  border: 1px solid #ffffff18;
+  overflow: hidden;
+  background: #000;
+}
+
+/* garante que a imagem respeite o raio */
+#step3 .finalPhotos .finalPic{
+  border-radius: 16px;
+}
+
+
 .final.open .letterReveal{
   opacity: 1;
   transform: translateY(0) scale(1);

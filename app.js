@@ -778,36 +778,49 @@ function initStep3() {
     if (holdText) holdText.textContent = "Pressione e segure 💛";
   }
 
-  function typeHTML(el, html, { speed = 18, pauseDot = 240, pauseComma = 120 } = {}) {
-    if (!el || !html) return;
+function typeHTML(el, html, { speed = 40, pauseDot = 520, pauseComma = 220 } = {}) {
+  if (!el || !html) return;
 
-    let i = 0;
-    el.innerHTML = "";
+  let i = 0;
 
-    function step() {
-      if (i >= html.length) return;
+  // mantém o cursor dentro do elemento (não usa el.innerHTML = "")
+  el.innerHTML = '<span class="cursor" id="cursor">|</span>';
 
-      if (html[i] === "<") {
-        const end = html.indexOf(">", i);
-        if (end === -1) return;
-        el.innerHTML += html.slice(i, end + 1);
-        i = end + 1;
-        return setTimeout(step, 0);
-      }
+  const getCursor = () => el.querySelector("#cursor");
 
-      const ch = html[i];
-      el.innerHTML += ch;
-      i++;
+  function append(chunk) {
+    const cursor = getCursor();
+    if (cursor) cursor.insertAdjacentHTML("beforebegin", chunk);
+    else el.insertAdjacentHTML("beforeend", chunk);
+  }
 
-      let extra = 0;
-      if (ch === "." || ch === "!" || ch === "?") extra = pauseDot;
-      else if (ch === "," || ch === ";") extra = pauseComma;
+  function step() {
+    if (i >= html.length) return;
 
-      setTimeout(step, speed + extra);
+    // tags HTML
+    if (html[i] === "<") {
+      const end = html.indexOf(">", i);
+      if (end === -1) return;
+
+      append(html.slice(i, end + 1));  // <-- aqui no lugar de el.innerHTML += ...
+      i = end + 1;
+      return setTimeout(step, 0);
     }
 
-    step();
+    const ch = html[i];
+    append(ch);                        // <-- aqui no lugar de el.innerHTML += ch
+    i++;
+
+    let extra = 0;
+    if (ch === "." || ch === "!" || ch === "?") extra = pauseDot;
+    else if (ch === "," || ch === ";") extra = pauseComma;
+
+    setTimeout(step, speed + extra);
   }
+
+  step();
+}
+
 
   let finalPhotoIndex = 0;
   let finalTimer = null;
@@ -875,7 +888,7 @@ function startFinalPhotoSequence() {
     const giftRow = $("giftRow");
 
     if (typed) {
-      typed.innerHTML = "";
+      typed.innerHTML = '<span class="cursor" id="cursor">|</span>';
       final.classList.remove("doneTyping");
       typeHTML(typed, config.letterHTML, { speed: 18, pauseDot: 260, pauseComma: 120 });
 
