@@ -2,14 +2,18 @@
 const config = {
   herName: "MEU AMOR",
   photo1: "fotos/Step-Foto1.jpeg",
-  photo2: "https://YOUR-PHOTO-LINK-2",
+  // photo2: "https://YOUR-PHOTO-LINK-2",
   photo3: "https://YOUR-PHOTO-LINK-3",
   // Photos from the step 2 puzzle
   block1: "./fotos/Step2-Foto1-Bloco1.jpeg",
   block2: "./fotos/Step2-Foto2-Bloco2.jpeg",
   block3: "./fotos/Step2-Foto3-Bloco3.jpeg",
   cap1: "Você é minha paz e minha bagunça boa.<br/>E eu adoro como tudo fica mais leve quando é com você.",
-  cap2: "Eu guardo você em detalhes.<br/>Nos dias bons, nos dias difíceis, e principalmente nos dias comuns.",
+  cap2Lines: [
+  "<b>Eu guardo você em detalhes.</b><br/>Nos dias bons, nos dias difíceis, e principalmente nos dias comuns.",
+  "<b>Você é minha paz e minha bagunça boa.</b><br/>E eu adoro como tudo fica mais leve quando é com você.",
+  "<b>Ela é bravinha, e eu sorrio por isso.</b><br/>Porque é dessa força que vem o cuidado e a vontade de evoluir juntos."
+],
   letterHTML: `
     <b>Meu amor, feliz aniversário.</b><br/><br/>
     Hoje eu só quero te lembrar do óbvio: você é uma das melhores partes da minha vida.
@@ -31,11 +35,26 @@ const safeSetImg = (el, url, fallback) => {
 };
 
 safeSetImg($("photo1"), config.photo1, $("photo1").src);
-safeSetImg($("photo2"), config.photo2, $("photo2").src);
+// safeSetImg($("photo2"), config.photo2, $("photo2").src);
 safeSetImg($("photo3"), config.photo3, $("photo3").src);
 
 $("cap1").innerHTML = config.cap1;
-$("cap2").innerHTML = config.cap2;
+// $("cap2").innerHTML = config.cap2;
+function renderCap2Lines(){
+  const el = $("cap2");
+  if(!el) return;
+
+  const lines = (config.cap2Lines && config.cap2Lines.length)
+    ? config.cap2Lines
+    : [ "Escreva aqui suas frases 💛" ];
+
+  el.innerHTML = lines
+    .map((html, i) => `<div class="capLine ${i===0 ? "active" : ""}">${html}</div>`)
+    .join("");
+}
+
+renderCap2Lines();
+
 $("letter").innerHTML = config.letterHTML;
 
 // ================= STEP 1 =================
@@ -367,11 +386,72 @@ function checkClusterAndUnlock(){
   }
 }
 
+let photo2Timer = null;
+let cap2Timer = null;
+let photo2Index = 0;
+let cap2Index = 0;
+
+function startStep2PhotoSequence() {
+  const seq = document.getElementById("photo2Seq");
+  const cap = document.getElementById("cap2");
+  if (!seq) return;
+
+  const imgs = Array.from(seq.querySelectorAll("img"));
+  const lines = cap ? Array.from(cap.querySelectorAll(".capLine")) : [];
+
+  if (imgs.length <= 1) return;
+
+  // limpa timers anteriores
+  if (photo2Timer) clearInterval(photo2Timer);
+  if (cap2Timer) clearInterval(cap2Timer);
+
+  function setActivePhoto(i){
+    imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
+  }
+
+  function setActiveCaption(i){
+    if(!lines.length) return;
+    lines.forEach((ln, idx) => ln.classList.toggle("active", idx === i));
+  }
+
+  // estado inicial
+  photo2Index = 0;
+  cap2Index = 0;
+  setActivePhoto(photo2Index);
+  setActiveCaption(cap2Index);
+
+  // FOTO troca a cada 2.5s
+  photo2Timer = setInterval(() => {
+    photo2Index = (photo2Index + 1) % imgs.length;
+    setActivePhoto(photo2Index);
+  }, 2500);
+
+  // FRASE troca mais devagar (6s)
+  if(lines.length > 1){
+    cap2Timer = setInterval(() => {
+      cap2Index = (cap2Index + 1) % lines.length;
+      setActiveCaption(cap2Index);
+    }, 6000);
+  }
+
+  // clique avança foto (frase mantém ritmo dela)
+  seq.onclick = () => {
+    photo2Index = (photo2Index + 1) % imgs.length;
+    setActivePhoto(photo2Index);
+  };
+}
+
+
+
 function unlockStep2(){
   if(step2Done) return;
 
   step2Done = true;
   assembled.style.display = "block";
+
+  // ✅ inicia sequência de 3 fotos
+  startStep2PhotoSequence();
+
   pieceEls.forEach(el => el.style.display = "none");
 
   b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
@@ -386,6 +466,7 @@ function unlockStep2(){
     console.log("✅ STEP2 UNLOCKED (clusterOk + touchOk)");
   }
 }
+
 
 // ================= STEP 3 =================
 const holdBtn = $("holdBtn");
