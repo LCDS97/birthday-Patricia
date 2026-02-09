@@ -810,39 +810,50 @@ function initStep3() {
   }
 
   let finalPhotoIndex = 0;
+  let finalTimer = null;
+  const FINAL_INTERVAL = 4500; // 4.5s (ajusta como quiser)
 
-  function startFinalPhotoSequence() {
-    const wrap = $("finalPhotos");
-    if (!wrap) return;
 
-    const pics = Array.from(wrap.querySelectorAll(".finalPic"));
-    if (pics.length === 0) return;
+function startFinalPhotoSequence() {
+  console.log("[FINAL] autoplay start");
 
-    function setActive(i) {
-      const safeIndex = ((i % pics.length) + pics.length) % pics.length;
-      const activePic = pics[safeIndex];
+  const wrap = document.getElementById("finalPhotos");
+  if (!wrap) return;
 
-      const pos = activePic?.dataset?.pos || "center center";
+  const pics = Array.from(wrap.querySelectorAll(".finalPic"));
+  if (!pics.length) return;
 
-      pics.forEach((img, idx) => {
-        const isActive = idx === safeIndex;
-        img.classList.toggle("active", isActive);
-        img.style.zIndex = isActive ? "5" : "1";
-        if (isActive) img.style.objectPosition = pos;
-      });
+  function setActive(i) {
+    const safe = ((i % pics.length) + pics.length) % pics.length;
+    const activePic = pics[safe];
 
-      finalPhotoIndex = safeIndex;
-    }
+    const pos = activePic?.dataset?.pos || "center center";
 
-    finalPhotoIndex = 0;
-    setActive(finalPhotoIndex);
+    pics.forEach((img, idx) => {
+      const isActive = idx === safe;
+      img.classList.toggle("active", isActive);
+      img.style.zIndex = isActive ? "5" : "1";
+      if (isActive) img.style.objectPosition = pos;
+    });
 
-    wrap.onclick = () => {
-      const next = (finalPhotoIndex + 1) % pics.length;
-      setActive(next);
-      if (navigator.vibrate) navigator.vibrate(12);
-    };
+    finalPhotoIndex = safe;
   }
+
+  // começa na primeira
+  finalPhotoIndex = 0;
+  setActive(finalPhotoIndex);
+
+  // limpa timer anterior (segurança)
+  if (finalTimer) clearInterval(finalTimer);
+
+  // autoplay
+  finalTimer = setInterval(() => {
+    setActive(finalPhotoIndex + 1);
+  }, FINAL_INTERVAL);
+
+  // garante que não tem clique
+  wrap.onclick = null;
+}
 
   function completeStep3() {
     if (step3Done) return;
