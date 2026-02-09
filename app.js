@@ -3,7 +3,7 @@ const config = {
   herName: "MEU AMOR",
   photo1: "fotos/Step-Foto1.jpeg",
   // photo2: "https://YOUR-PHOTO-LINK-2",
-  photo3: "https://YOUR-PHOTO-LINK-3",
+  photo3: "fotos/Step3-Foto1.jpeg",
   // Photos from the step 2 puzzle
   block1: "./fotos/Step2-Foto1-Bloco1.jpeg",
   block2: "./fotos/Step2-Foto2-Bloco2.jpeg",
@@ -19,10 +19,20 @@ const config = {
     Hoje eu só quero te lembrar do óbvio: você é uma das melhores partes da minha vida.
     Obrigado por existir do seu jeitinho, por me escolher, por me ensinar, por me acalmar e por me fazer querer ser melhor.<br/><br/>
     Eu amo você com calma e com intensidade — e eu quero construir mais e mais momentos com você.<br/><br/>
-    <span class="chip">🎁 Seu presente: escreva aqui seu plano (ex: “eu vou te buscar às 19:30…”)</span>
     <div class="small">PS: eu te amo. Muito.</div>
   `
 };
+
+window.addEventListener("error", (e) => {
+  console.error("[GLOBAL ERROR]", e.message, "at", e.filename + ":" + e.lineno + ":" + e.colno);
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("[PROMISE ERROR]", e.reason);
+});
+
+console.log("[APP] app.js carregou ✅");
+
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,13 +40,41 @@ const $ = (id) => document.getElementById(id);
 $("herName").textContent = config.herName;
 
 const safeSetImg = (el, url, fallback) => {
-  if (url && url.trim() && !url.includes("YOUR-PHOTO-LINK")) el.src = url;
-  else el.src = fallback;
+  if (!el) {
+    console.warn("[IMG] safeSetImg: elemento não existe (null). Ignorando.");
+    return;
+  }
+
+  const finalUrl =
+    (url && url.trim() && !url.includes("YOUR-PHOTO-LINK")) ? url : fallback;
+
+  el.src = finalUrl;
+  console.log("[IMG] set src ->", finalUrl);
 };
+
 
 safeSetImg($("photo1"), config.photo1, $("photo1").src);
 // safeSetImg($("photo2"), config.photo2, $("photo2").src);
-safeSetImg($("photo3"), config.photo3, $("photo3").src);
+// safeSetImg($("photo3"), config.photo3, $("photo3").src);
+
+function setupFinalPhotosDebug(){
+  const wrap = document.getElementById("finalPhotos");
+  if(!wrap){
+    console.warn("[FINAL] #finalPhotos não encontrado");
+    return;
+  }
+
+  const pics = Array.from(wrap.querySelectorAll(".finalPic"));
+  console.log("[FINAL] total finalPic =", pics.length);
+
+  pics.forEach((img, i) => {
+    img.addEventListener("load", () => console.log(`[FINAL] foto ${i+1} carregou ✅`, img.src));
+    img.addEventListener("error", () => console.error(`[FINAL] foto ${i+1} ERRO ❌`, img.src));
+  });
+}
+
+setupFinalPhotosDebug();
+
 
 $("cap1").innerHTML = config.cap1;
 // $("cap2").innerHTML = config.cap2;
@@ -55,7 +93,7 @@ function renderCap2Lines(){
 
 renderCap2Lines();
 
-$("letter").innerHTML = config.letterHTML;
+// $("letter").innerHTML = "";
 
 // ================= STEP 1 =================
 const heartField = $("heartField");
@@ -469,6 +507,7 @@ function unlockStep2(){
 
 
 // ================= STEP 3 =================
+
 const holdBtn = $("holdBtn");
 const bar = $("bar");
 const holdText = $("holdText");
@@ -511,18 +550,194 @@ function cancelHold(){
   holdText.textContent = "Pressione e segure 💛";
 }
 
+function typeHTML(el, html, {speed=18, pauseDot=240, pauseComma=120} = {}) {
+  console.log("[TYPE] start typeHTML");
+  console.log("[TYPE] target element:", el);
+  console.log("[TYPE] html length:", html?.length);
+
+  if (!el) {
+    console.error("[TYPE] ERRO: elemento alvo não existe");
+    return;
+  }
+
+  if (!html) {
+    console.error("[TYPE] ERRO: html vazio ou undefined");
+    return;
+  }
+
+  let i = 0;
+  el.innerHTML = "";
+
+  function step() {
+    if (i >= html.length) {
+      console.log("[TYPE] typing finished");
+      return;
+    }
+
+    // Tag HTML → escreve inteira
+    if (html[i] === "<") {
+      const end = html.indexOf(">", i);
+      if (end === -1) return;
+
+      el.innerHTML += html.slice(i, end + 1);
+      i = end + 1;
+      return setTimeout(step, 0);
+    }
+
+    // Texto normal
+    const ch = html[i];
+    el.innerHTML += ch;
+    i++;
+
+    let extra = 0;
+    if (ch === "." || ch === "!" || ch === "?") extra = pauseDot;
+    else if (ch === "," || ch === ";") extra = pauseComma;
+
+    setTimeout(step, speed + extra);
+  }
+
+  step();
+}
+
+let finalPhotoIndex = 0;
+
+function startFinalPhotoSequence(){
+  console.log("[FINAL] startFinalPhotoSequence() chamado");
+
+  const wrap = document.getElementById("finalPhotos");
+  if(!wrap){
+    console.warn("[FINAL] ERRO: #finalPhotos não existe");
+    return;
+  }
+
+  const pics = Array.from(wrap.querySelectorAll(".finalPic"));
+  console.log("[FINAL] fotos encontradas:", pics.length);
+
+  if(pics.length === 0){
+    console.warn("[FINAL] ERRO: nenhuma .finalPic dentro de #finalPhotos");
+    return;
+  }
+
+  function setActive(i){
+    const safeIndex = ((i % pics.length) + pics.length) % pics.length;
+
+    const activePic = pics[safeIndex];
+    const pos = (activePic && activePic.dataset && activePic.dataset.pos) ? activePic.dataset.pos : "center center";
+    const anim = (activePic && activePic.dataset && activePic.dataset.anim) ? activePic.dataset.anim : "none";
+
+    pics.forEach((img, idx) => {
+      const isActive = idx === safeIndex;
+      img.classList.toggle("active", isActive);
+
+      // ✅ garante que a foto ativa fica por cima
+      img.style.zIndex = isActive ? "5" : "1";
+
+      // ✅ aplica o object-position apenas na ativa
+      if(isActive) img.style.objectPosition = pos;
+    });
+
+    console.log("[FINAL] active =", safeIndex, "| anim =", anim, "| pos =", pos);
+    finalPhotoIndex = safeIndex;
+  }
+
+  // ✅ começa sempre na primeira
+  finalPhotoIndex = 0;
+  setActive(finalPhotoIndex);
+
+  // ✅ evita acumular handlers se a função for chamada de novo
+  wrap.onclick = null;
+
+  // ✅ avança só no clique
+  wrap.onclick = () => {
+    const next = (finalPhotoIndex + 1) % pics.length;
+    console.log("[FINAL] clique -> next =", next);
+    setActive(next);
+
+    if(navigator.vibrate) navigator.vibrate(12);
+  };
+
+  console.log("[FINAL] clique configurado ✅");
+}
+
+
+
 function completeStep3(){
-  if(step3Done) return;
+  console.log("[STEP3] completeStep3 chamado");
+
+  if(step3Done){
+    console.log("[STEP3] já estava concluído");
+    return;
+  }
+
   step3Done = true;
   holding = false;
   cancelAnimationFrame(raf);
+
   bar.style.width = "100%";
   holdText.textContent = "Aberto ✅";
   b3.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+
   final.style.display = "block";
+  final.classList.add("open");
+  console.log("[STEP3] final.classList =", final.className);
+
   final.scrollIntoView({behavior:"smooth", block:"nearest"});
+
+  const typed = document.getElementById("letterTyped");
+  const giftRow = document.getElementById("giftRow");
+
+  console.log("[STEP3] letterTyped encontrado?", !!typed);
+  console.log("[STEP3] config.letterHTML existe?", !!config.letterHTML);
+  console.log("[STEP3] giftRow encontrado?", !!giftRow);
+
+  if(!typed){
+    console.error("[STEP3] ERRO: #letterTyped não existe no DOM");
+    return;
+  }
+
+  typed.innerHTML = "";
+  final.classList.remove("doneTyping");
+
+  console.log("[STEP3] iniciando typewriter...");
+  typeHTML(typed, config.letterHTML, {
+    speed: 18,
+    pauseDot: 260,
+    pauseComma: 120
+  });
+
+  const approxMs = Math.max(1500, config.letterHTML.length * 18);
+  const rewardAt = Math.max(350, approxMs - 150);
+
+  console.log("[STEP3] approxMs =", approxMs, "| rewardAt =", rewardAt);
+
+  // ✅ MOMENTO REWARD: foto aparece + reward pop
+  setTimeout(() => {
+    final.classList.add("showPhoto");
+    console.log("[STEP3] showPhoto aplicado ✅", final.className);
+
+    startFinalPhotoSequence();
+
+    if(giftRow){
+      giftRow.style.display = "block";
+      giftRow.classList.remove("pop");
+      void giftRow.offsetWidth;
+      giftRow.classList.add("pop");
+      console.log("[STEP3] giftRow pop ✅");
+    }
+  }, rewardAt);
+
+
+  // cursor some ao final
+  setTimeout(() => {
+    final.classList.add("doneTyping");
+    console.log("[STEP3] typing finalizado");
+  }, approxMs);
+
   if(navigator.vibrate) navigator.vibrate([40,30,40,30,70]);
 }
+
+
+
 
 holdBtn.addEventListener("touchstart", (e)=> { e.preventDefault(); startHold(); }, {passive:false});
 holdBtn.addEventListener("touchend", ()=> cancelHold(), {passive:true});

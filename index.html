@@ -112,6 +112,7 @@
         </div>
         <div class="badge" id="b3">🔒 Trancado</div>
       </div>
+
       <div class="content">
         <div class="holdWrap">
           <div class="holdBtn" id="holdBtn">
@@ -122,11 +123,27 @@
         </div>
 
         <div class="final" id="final">
-          <img id="photo3" alt="Foto final" src="https://images.unsplash.com/photo-1520975682031-a80a56b7b9f5?auto=format&fit=crop&w=1200&q=80" />
-          <div class="letter" id="letter"></div>
+          <!-- <img id="photo3" alt="Foto final" src="https://images.unsplash.com/photo-1520975682031-a80a56b7b9f5?auto=format&fit=crop&w=1200&q=80" /> -->
+           <div class="finalPhotos" id="finalPhotos" aria-label="Fotos finais">
+              <img class="finalPic active" data-anim="rise" data-pos="center 20%" alt="Foto final 1" src="fotos/Step3-Foto1.jpeg" />
+              <img class="finalPic" data-anim="kenburns" data-pos="center 20%" alt="Foto final 2" src="fotos/Step3-Foto2.jpeg" />
+              <img class="finalPic" data-anim="flip" data-pos="center center" alt="Foto final 3" src="fotos/Step3-Foto3.jpeg" />
+            </div>
+
+          <div class="letter" id="letter">
+            <div class="letterReveal" id="letterReveal">
+              <div class="letterTyped" id="letterTyped"></div>
+                <div class="giftRow" id="giftRow" style="display:none;">
+                  <span class="chip" id="giftChip">🎁 Seu presente: escreva aqui seu plano (ex: “eu vou te buscar às 19:30…”)</span>
+                </div>
+              <span class="cursor" id="cursor">|</span>
+            </div>
+          </div>
         </div>
+
       </div>
     </section>
+
   </div>
 
   <script src="./app.js"></script>
