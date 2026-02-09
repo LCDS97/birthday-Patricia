@@ -3,48 +3,181 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Para você 💛 — 1</title>
+  <title>Para você 💛</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
-<body data-step="1">
-  <div class="app">
-    <div class="top">
-      <div class="glow"></div>
-      <h1>Feliz aniversário, <span id="herName">meu amor</span> 💛</h1>
-      <p class="sub">
-        Eu fiz isso pra você — uma coisinha que abre devagar… igual as melhores coisas da vida.
-        <br/>Sem respostas, sem pressão. Só você descobrindo.
-      </p>
+
+<body class="intro-locked" data-step="1">
+
+  <!-- Tela Inicial (Overlay) -->
+  <div id="introOverlay" class="intro">
+    <div class="intro-card">
+      <h1>Feliz Aniversário, meu amor! ❤️</h1>
+      <p>Aqui esta meu presentinho que montei especialmente para você!</p>
+
+      <button id="startBtn" class="start-btn" type="button">Começar 🎵</button>
+      <button id="noMusicBtn" class="no-music-btn" type="button">Começar sem música</button>
+    </div>
+  </div>
+
+  <!-- Música -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="./sound/instrumental-bk-cacos-de-vidro.mp3" type="audio/mpeg" />
+  </audio>
+
+  <!-- Root SPA -->
+  <div id="appRoot" class="appRoot">
+
+    <!-- VIEW: STEP 1 -->
+    <div id="view-step1" class="view">
+      <div class="app">
+        <div class="top">
+          <div class="glow"></div>
+          <h1>Feliz aniversário, <span class="herName">meu amor</span> 💛</h1>
+          <p class="sub">
+            Eu fiz isso pra você — uma coisinha que abre devagar… igual as melhores coisas da vida.
+            <br/>Sem respostas, sem pressão. Só você descobrindo.
+          </p>
+        </div>
+
+        <section class="step" id="step1">
+          <div class="stepHead">
+            <div class="title">
+              <b>1) Encontre o coração</b>
+              <span>Toque na tela… e preste atenção no que “responde”.</span>
+            </div>
+            <div class="badge" id="b1">🔒 Trancado</div>
+          </div>
+
+          <div class="content">
+            <div class="heartField" id="heartField" aria-label="Área interativa">
+              <div class="pulse" id="pulse"></div>
+              <div class="spark" id="spark"></div>
+            </div>
+
+            <div class="hint">
+              Dica: quando você estiver perto… vai parecer que a tela está “viva”.
+            </div>
+
+            <div class="reveal" id="reveal1">
+              <img id="photo1" alt="Foto 1" src="https://images.unsplash.com/photo-1520975958225-2ad2f74b9b01?auto=format&fit=crop&w=1200&q=80" />
+              <div class="cap" id="cap1"></div>
+            </div>
+
+            <div class="divider"></div>
+            <button class="btn locked" id="to2" type="button" disabled>Continuar →</button>
+          </div>
+        </section>
+      </div>
     </div>
 
-    <section class="step" id="step1">
-      <div class="stepHead">
-        <div class="title">
-          <b>1) Encontre o coração</b>
-          <span>Toque na tela… e preste atenção no que “responde”.</span>
+    <!-- VIEW: STEP 2 -->
+    <div id="view-step2" class="view hidden">
+      <div class="app">
+        <div class="top">
+          <div class="glow"></div>
+          <h1>Feliz aniversário, <span class="herName">meu amor</span> 💛</h1>
+          <p class="sub">Só mais um pouquinho… 💛</p>
         </div>
-        <div class="badge" id="b1">🔒 Trancado</div>
+
+        <section class="step" id="step2">
+          <div class="stepHead">
+            <div class="title">
+              <b>2) Junte os fragmentos</b>
+              <span>Arraste as peças e deixe elas pertinho uma da outra.</span>
+            </div>
+            <div class="badge" id="b2">🔒 Trancado</div>
+          </div>
+
+          <div class="content">
+            <div class="board" id="board">
+              <div class="ghostText">As peças querem se encontrar. Só aproxima… 💛</div>
+
+              <div class="piece heartA" id="p1"></div>
+              <div class="piece heartB" id="p2"></div>
+              <div class="piece heartC" id="p3"></div>
+
+              <div class="assembled" id="assembled">
+                <div class="photoSequence" id="photo2Seq" aria-label="Sequência de fotos do Step 2">
+                  <img class="active" alt="Foto 2 - 1" src="fotos/Step2-Foto1-FinalPhoto.jpeg" />
+                  <img alt="Foto 2 - 2" src="fotos/Step2-Foto2-FinalPhoto.jpeg" />
+                  <img alt="Foto 2 - 3" src="fotos/Step2-Foto3-FinalPhoto.jpeg" />
+                  <img alt="Foto 2 - 4" src="fotos/Step2-Foto4-FinalPhoto.jpeg" />
+                  <img alt="Foto 2 - 5" src="fotos/Step2-Foto5-FinalPhoto.jpeg" />
+                  <img alt="Foto 2 - 6" src="fotos/Step2-Foto6-FinalPhoto.jpeg" />
+                </div>
+
+                <div class="overlay" id="cap2"></div>
+              </div>
+            </div>
+
+            <div class="hint">
+              Dica: quando as 3 estiverem bem perto… acontece.
+            </div>
+
+            <div class="divider"></div>
+            <button class="btn locked" id="to3" type="button" disabled>Ir pro último →</button>
+          </div>
+        </section>
       </div>
+    </div>
 
-      <div class="content">
-        <div class="heartField" id="heartField" aria-label="Área interativa">
-          <div class="pulse" id="pulse"></div>
-          <div class="spark" id="spark"></div>
+    <!-- VIEW: STEP 3 -->
+    <div id="view-step3" class="view hidden">
+      <div class="app">
+        <div class="top">
+          <div class="glow"></div>
+          <h1>Feliz aniversário, <span class="herName">meu amor</span> 💛</h1>
+          <p class="sub">Agora… segura só um pouquinho.</p>
         </div>
 
-        <div class="hint">
-          Dica: quando você estiver perto… vai parecer que a tela está “viva”.
-        </div>
+        <section class="step" id="step3">
+          <div class="stepHead">
+            <div class="title">
+              <b>3) Trava do tempo</b>
+              <span>Segura um pouquinho…</span>
+            </div>
+            <div class="badge" id="b3">🔒 Trancado</div>
+          </div>
 
-        <div class="reveal" id="reveal1">
-          <img id="photo1" alt="Foto 1" src="https://images.unsplash.com/photo-1520975958225-2ad2f74b9b01?auto=format&fit=crop&w=1200&q=80" />
-          <div class="cap" id="cap1"></div>
-        </div>
+          <div class="content">
+            <div class="holdWrap">
+              <div class="holdBtn" id="holdBtn">
+                <div class="bar" id="bar"></div>
+                <div class="holdText" id="holdText">Pressione e segure 💛</div>
+              </div>
+              <div class="small">(prometo que vale a pena)</div>
+            </div>
 
-        <div class="divider"></div>
-        <button class="btn locked" id="to2" disabled>Continuar →</button>
+            <div class="final" id="final">
+              <div class="finalPhotos" id="finalPhotos" aria-label="Fotos finais">
+                <img class="finalPic active" data-anim="rise" data-pos="center 20%" alt="Foto final 1" src="fotos/Step3-Foto1.jpeg" />
+                <img class="finalPic" data-anim="kenburns" data-pos="center 20%" alt="Foto final 2" src="fotos/Step3-Foto2.jpeg" />
+                <img class="finalPic" data-anim="flip" data-pos="center center" alt="Foto final 3" src="fotos/Step3-Foto3.jpeg" />
+              </div>
+
+              <div class="letter" id="letter">
+                <div class="letterReveal" id="letterReveal">
+                  <span class="cursor" id="cursor">|</span>
+                  <div class="letterTyped" id="letterTyped"></div>
+                  <div class="giftRow" id="giftRow" style="display:none;">
+                    <span class="chip" id="giftChip">🎁 Seu presente: escreva aqui seu plano (ex: “eu vou te buscar às 19:30…”)</span>
+                  </div>
+                  
+
+                  <div class="divider"></div>
+                  <button class="btn" id="restartBtn" type="button">Recomeçar 🔁</button>
+
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
+
   </div>
 
   <script src="./app.js"></script>

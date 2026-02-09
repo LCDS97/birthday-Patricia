@@ -7,6 +7,22 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body data-step="1">
+
+  <!-- Tela Inicial (Overlay) -->
+  <div id="introOverlay" class="intro">
+    <div class="intro-card">
+      <h1>Feliz Aniversário ❤️</h1>
+      <p>Clique para começar nossa história</p>
+
+      <button id="startBtn" class="start-btn">Começar 🎵</button>
+      <button id="noMusicBtn" class="no-music-btn">Começar sem música</button>
+    </div>
+  </div>
+
+  <!-- Música -->
+  <audio id="bg-music" loop>
+    <source src="./sound/instrumental-bk-cacos-de-vidro.mp3" type="audio/mpeg" />
+  </audio>
   <div class="app">
     <div class="top">
       <div class="glow"></div>

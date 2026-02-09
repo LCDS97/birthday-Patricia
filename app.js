@@ -4,62 +4,13 @@
 window.addEventListener("error", (e) => {
   console.error("[GLOBAL ERROR]", e.message, "at", `${e.filename}:${e.lineno}:${e.colno}`);
 });
-
 window.addEventListener("unhandledrejection", (e) => {
   console.error("[PROMISE ERROR]", e.reason);
 });
-
 console.log("[APP] app.js carregou ✅");
 
 // Helper
 const $ = (id) => document.getElementById(id);
-
-// =====================
-// ROUTER (3 páginas) + PROGRESSO
-// =====================
-const ROUTES = { 1: "index.html", 2: "step2.html", 3: "step3.html" };
-const STEP = Number(document.body?.dataset?.step || "1");
-
-function getProgress() {
-  return {
-    step1Done: localStorage.getItem("step1Done") === "1",
-    step2Done: localStorage.getItem("step2Done") === "1",
-    step3Done: localStorage.getItem("step3Done") === "1",
-  };
-}
-
-function setDone(n) {
-  localStorage.setItem(`step${n}Done`, "1");
-  console.log(`[PROGRESS] step${n}Done = 1 ✅`);
-}
-
-function goToStep(n) {
-  const url = ROUTES[n] || ROUTES[1];
-  console.log(`[ROUTER] indo para step ${n} -> ${url}`);
-  window.location.href = url;
-}
-
-function guard() {
-  const p = getProgress();
-  console.log("[GUARD] page step =", STEP, "| progress =", p);
-
-  // step1 sempre pode abrir
-  if (STEP === 1) return;
-
-  // step2 só se step1Done
-  if (STEP === 2 && !p.step1Done) {
-    console.warn("[GUARD] step2 bloqueado (step1Done=false) -> voltando step1");
-    return goToStep(1);
-  }
-
-  // step3 só se step2Done
-  if (STEP === 3 && !p.step2Done) {
-    console.warn("[GUARD] step3 bloqueado (step2Done=false) -> voltando step2");
-    return goToStep(2);
-  }
-}
-
-guard();
 
 // =====================
 // CONFIG (SEU CONTEÚDO)
@@ -91,37 +42,75 @@ const config = {
 };
 
 // =====================
-// APPLY CONFIG (onde existir)
+// PROGRESS
 // =====================
-const herNameEl = $("herName");
-if (herNameEl) {
-  herNameEl.textContent = config.herName;
-  console.log("[CONFIG] herName =", config.herName);
+function getProgress() {
+  return {
+    step1Done: localStorage.getItem("step1Done") === "1",
+    step2Done: localStorage.getItem("step2Done") === "1",
+    step3Done: localStorage.getItem("step3Done") === "1",
+  };
+}
+function setDone(n) {
+  localStorage.setItem(`step${n}Done`, "1");
+  console.log(`[PROGRESS] step${n}Done = 1 ✅`);
 }
 
-function safeSetImg(el, url, fallback) {
-  if (!el) {
-    console.warn("[IMG] safeSetImg: elemento null, ignorando.");
-    return;
-  }
+// =====================
+// STATE (booleans)
+// =====================
+const state = {
+  introOpen: true,
+  step: 1,
+  inited: { 1: false, 2: false, 3: false },
+};
 
+function canGoToStep(n) {
+  const p = getProgress();
+  if (n === 2 && !p.step1Done) return 1;
+  if (n === 3 && !p.step2Done) return 2;
+  return n;
+}
+
+function setStep(n) {
+  const target = canGoToStep(n);
+  if (target !== n) console.warn("[GUARD] bloqueado, redirecionando para", target);
+
+  state.step = target;
+  render();
+}
+
+function showIntro(open) {
+  state.introOpen = !!open;
+  render();
+}
+
+// =====================
+// MUSIC
+// =====================
+async function tryPlayMusic() {
+  const music = $("bg-music");
+  if (!music) return;
+  if (localStorage.getItem("musicPlaying") !== "true") return;
+
+  music.volume = 0.4;
+  try {
+    await music.play();
+    console.log("[MUSIC] tocando ✅");
+  } catch (e) {
+    console.log("[MUSIC] bloqueado até interação:", e);
+  }
+}
+
+// =====================
+// APPLY CONFIG (sempre que carregar)
+// =====================
+function safeSetImg(el, url, fallback) {
+  if (!el) return;
   const finalUrl = (url && url.trim() && !url.includes("YOUR-PHOTO-LINK")) ? url : fallback;
   el.src = finalUrl;
-  console.log("[IMG] set src ->", finalUrl);
 }
 
-// Step1 photo
-const photo1El = $("photo1");
-if (photo1El) safeSetImg(photo1El, config.photo1, photo1El.src);
-
-// Step1 caption
-const cap1El = $("cap1");
-if (cap1El) {
-  cap1El.innerHTML = config.cap1;
-  console.log("[CONFIG] cap1 aplicado ✅");
-}
-
-// Step2 captions (overlay)
 function renderCap2Lines() {
   const el = $("cap2");
   if (!el) return;
@@ -133,35 +122,157 @@ function renderCap2Lines() {
   el.innerHTML = lines
     .map((html, i) => `<div class="capLine ${i === 0 ? "active" : ""}">${html}</div>`)
     .join("");
-
-  console.log("[CONFIG] cap2Lines renderizado ✅ total =", lines.length);
 }
-renderCap2Lines();
 
-// Debug dos finais (step3)
-function setupFinalPhotosDebug() {
-  const wrap = document.getElementById("finalPhotos");
-  if (!wrap) return;
+function applyConfig() {
+  document.querySelectorAll(".herName").forEach((el) => el.textContent = config.herName);
 
-  const pics = Array.from(wrap.querySelectorAll(".finalPic"));
-  console.log("[FINAL] total finalPic =", pics.length);
+  const photo1El = $("photo1");
+  if (photo1El) safeSetImg(photo1El, config.photo1, photo1El.src);
 
-  pics.forEach((img, i) => {
-    img.addEventListener("load", () => console.log(`[FINAL] foto ${i + 1} carregou ✅`, img.src));
-    img.addEventListener("error", () => console.error(`[FINAL] foto ${i + 1} ERRO ❌`, img.src));
-  });
+  const cap1El = $("cap1");
+  if (cap1El) cap1El.innerHTML = config.cap1;
+
+  renderCap2Lines();
+  console.log("[CONFIG] aplicado ✅");
 }
-setupFinalPhotosDebug();
 
 // =====================
-// STEP 1
+// RENDER (mostra/esconde views)
 // =====================
-(function initStep1() {
-  const heartField = $("heartField");
-  if (!heartField) {
-    console.log("[STEP1] não é esta página, pulando init.");
-    return;
+function render() {
+  const overlay = $("introOverlay");
+  const view1 = $("view-step1");
+  const view2 = $("view-step2");
+  const view3 = $("view-step3");
+
+  if (overlay) overlay.style.display = state.introOpen ? "flex" : "none";
+  document.body.classList.toggle("intro-locked", state.introOpen);
+
+  if (view1) view1.classList.toggle("hidden", state.step !== 1);
+  if (view2) view2.classList.toggle("hidden", state.step !== 2);
+  if (view3) view3.classList.toggle("hidden", state.step !== 3);
+
+  document.body.dataset.step = String(state.step);
+
+  // init do step quando ele aparece
+  if (!state.inited[state.step]) {
+    if (state.step === 1) initStep1();
+    if (state.step === 2) initStep2();
+    if (state.step === 3) initStep3();
+    state.inited[state.step] = true;
   }
+
+  // Step2: relayout só depois de visível (senão width=0)
+  if (state.step === 2 && typeof window.__step2Relayout === "function") {
+    requestAnimationFrame(() => requestAnimationFrame(() => window.__step2Relayout()));
+  }
+
+  // tenta manter música viva
+  tryPlayMusic();
+}
+
+// function restartExperience() {
+//   // 1) ✅ para timers / handlers do step2 antes de limpar tudo
+//   if (window.__step2Cleanup) {
+//     try { window.__step2Cleanup(); } catch (e) { console.warn("[RESTART] step2 cleanup falhou", e); }
+//   }
+
+//   // 2) ✅ para música
+//   const music = document.getElementById("bg-music");
+//   if (music) {
+//     try { music.pause(); } catch(e) {}
+//     music.currentTime = 0;
+//   }
+
+//   // 3) ✅ limpa localStorage
+//   STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+
+//   // 4) ✅ reseta state / reinits
+//   state.introOpen = true;
+//   state.step = 1;
+//   state.inited = { 1:false, 2:false, 3:false };
+
+//   render();
+
+//   console.log("[RESTART] experiência reiniciada ✅");
+// }
+
+function restartExperience() {
+  // 1) cleanup step2 (timers/onclick)
+  window.__step2Cleanup?.();
+
+  // 2) parar música
+  const music = document.getElementById("bg-music");
+  if (music) {
+    try { music.pause(); } catch(e) {}
+    music.currentTime = 0;
+  }
+
+  // 3) limpar storage
+  STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+  console.log("[RESTART] storage limpo ✅");
+
+  // 4) reload (zera DOM e respeita ordem sempre)
+  window.location.reload();
+}
+
+
+
+// =====================
+// BOOT
+// =====================
+
+const STORAGE_KEYS = [
+  "musicPlaying",
+  "step1Done",
+  "step2Done",
+  "step3Done"
+];
+
+// sempre limpar quando abrir o site (modo “sempre novo”)
+function resetAllStorage() {
+  STORAGE_KEYS.forEach(k => localStorage.removeItem(k));
+  console.log("[RESET] localStorage limpo ✅");
+}
+resetAllStorage();
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("[APP] DOM pronto ✅");
+
+  applyConfig();
+
+  // Intro handlers
+  const overlay = $("introOverlay");
+  const startBtn = $("startBtn");
+  const noMusicBtn = $("noMusicBtn");
+
+  if (startBtn && noMusicBtn && overlay) {
+    startBtn.addEventListener("click", async () => {
+      localStorage.setItem("musicPlaying", "true");
+      await tryPlayMusic();
+      showIntro(false);
+    });
+
+    noMusicBtn.addEventListener("click", () => {
+      localStorage.setItem("musicPlaying", "false");
+      showIntro(false);
+    });
+  }
+
+  // start
+  state.step = 1;
+  state.introOpen = true;
+  render();
+});
+
+// =====================
+// STEP 1 (SEU CÓDIGO)
+// =====================
+function initStep1() {
+  const heartField = $("heartField");
+  if (!heartField) return;
 
   console.log("[STEP1] init ✅");
 
@@ -184,7 +295,7 @@ setupFinalPhotosDebug();
 
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
-  let step1Done = false;
+  let step1Done = getProgress().step1Done;
 
   function updateHeartResponse(pos) {
     const target = { x: hotspot.x * pos.w, y: hotspot.y * pos.h };
@@ -204,18 +315,11 @@ setupFinalPhotosDebug();
       if (d < HOT_RADIUS) pulse.classList.add("on");
       else pulse.classList.remove("on");
     }
-
     return d;
   }
 
   function completeStep1() {
-    console.log("[STEP1] completeStep1 chamado");
-
-    if (step1Done) {
-      console.log("[STEP1] já estava concluído");
-      return;
-    }
-
+    if (step1Done) return;
     step1Done = true;
 
     if (reveal1) reveal1.style.display = "block";
@@ -227,8 +331,14 @@ setupFinalPhotosDebug();
     }
 
     setDone(1);
+    console.log("[STEP1] concluído ✅");
+  }
 
-    console.log("[STEP1] concluído ✅ — botão Continuar liberado");
+  // se já estava feito, re-hidrata UI
+  if (step1Done) {
+    if (reveal1) reveal1.style.display = "block";
+    if (b1) b1.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+    if (to2) { to2.classList.remove("locked"); to2.disabled = false; }
   }
 
   // Interações
@@ -256,21 +366,18 @@ setupFinalPhotosDebug();
 
   if (to2) {
     to2.addEventListener("click", () => {
-      console.log("[STEP1] clicar continuar -> ir step2");
-      goToStep(2);
+      console.log("[STEP1] ir step2");
+      setStep(2);
     });
   }
-})();
+}
 
 // =====================
-// STEP 2
+// STEP 2 (SEU CÓDIGO com relayout)
 // =====================
-(function initStep2() {
+function initStep2() {
   const board = $("board");
-  if (!board) {
-    console.log("[STEP2] não é esta página, pulando init.");
-    return;
-  }
+  if (!board) return;
 
   console.log("[STEP2] init ✅");
 
@@ -279,9 +386,8 @@ setupFinalPhotosDebug();
   const to3 = $("to3");
   const pieceEls = [$("p1"), $("p2"), $("p3")].filter(Boolean);
 
-  let step2Done = false;
+  let step2Done = getProgress().step2Done;
 
-  // ======= SETTINGS =======
   const DEBUG_STEP2 = false;
   const CLUSTER_FACTOR = 0.10;
   const MIN_OVERLAP_RATIO = 0.04;
@@ -292,7 +398,6 @@ setupFinalPhotosDebug();
     console.groupCollapsed(title);
     try { fn && fn(); } finally { console.groupEnd(); }
   }
-
   function fmt(n) { return Number.isFinite(n) ? n.toFixed(1) : String(n); }
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
@@ -319,7 +424,6 @@ setupFinalPhotosDebug();
     const rr = rectInBoard(el);
     return { x: rr.left + rr.width / 2, y: rr.top + rr.height / 2 };
   }
-
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
   function overlapArea(r1, r2) {
@@ -327,7 +431,6 @@ setupFinalPhotosDebug();
     const yOverlap = Math.max(0, Math.min(r1.bottom, r2.bottom) - Math.max(r1.top, r2.top));
     return xOverlap * yOverlap;
   }
-
   function overlapRatio(r1, r2) {
     const area = overlapArea(r1, r2);
     const minArea = Math.min(r1.width * r1.height, r2.width * r2.height);
@@ -335,9 +438,13 @@ setupFinalPhotosDebug();
     return area / minArea;
   }
 
-  // ======= INITIAL LAYOUT + IMAGES =======
   function layoutPieces() {
     const r = board.getBoundingClientRect();
+    if (r.width < 10 || r.height < 10) {
+      console.log("[STEP2] board sem tamanho (provavelmente hidden). aguardando...");
+      return;
+    }
+
     const placeImages = [config.block1, config.block2, config.block3];
     const starts = [
       { x: 0.10, y: 0.12 },
@@ -353,13 +460,18 @@ setupFinalPhotosDebug();
       el.style.backgroundSize = "cover";
       el.style.backgroundPosition = "center";
       el.style.backgroundRepeat = "no-repeat";
+      el.style.display = step2Done ? "none" : "block";
     });
 
-    console.log("[STEP2] layoutPieces ✅");
+    if (assembled) assembled.style.display = step2Done ? "block" : "none";
+
+    console.log("[STEP2] layoutPieces ✅", "| done =", step2Done);
   }
 
-  window.addEventListener("resize", () => { if (!step2Done) layoutPieces(); });
-  layoutPieces();
+  // expõe pro render() chamar quando step2 ficar visível
+  window.__step2Relayout = () => { if (!step2Done) layoutPieces(); else layoutPieces(); };
+
+  window.addEventListener("resize", () => { layoutPieces(); });
 
   // ======= DRAG =======
   let drag = null;
@@ -367,18 +479,8 @@ setupFinalPhotosDebug();
   function startDrag(el, ev) {
     if (step2Done) return;
     const p = getPoint(ev);
-
-    drag = {
-      el,
-      offX: p.x - el.offsetLeft,
-      offY: p.y - el.offsetTop,
-    };
-
+    drag = { el, offX: p.x - el.offsetLeft, offY: p.y - el.offsetTop };
     el.style.zIndex = 10;
-
-    logGroup(`🟦 STEP2 startDrag ${el.id}`, () => {
-      console.log("start left/top:", fmt(el.offsetLeft), fmt(el.offsetTop));
-    });
   }
 
   function moveDrag(ev) {
@@ -407,6 +509,7 @@ setupFinalPhotosDebug();
     el.addEventListener("touchstart", (e) => startDrag(el, e), { passive: true });
     el.addEventListener("mousedown", (e) => startDrag(el, e));
   });
+
   board.addEventListener("touchmove", (e) => moveDrag(e), { passive: true });
   board.addEventListener("mousemove", (e) => moveDrag(e));
   board.addEventListener("touchend", () => endDrag(), { passive: true });
@@ -420,53 +523,68 @@ setupFinalPhotosDebug();
   let cap2Index = 0;
 
   function startStep2PhotoSequence() {
-    const seq = document.getElementById("photo2Seq");
-    const cap = document.getElementById("cap2");
-    if (!seq) return;
+  const seq = $("photo2Seq");
+  const cap = $("cap2");
+  if (!seq) return;
 
-    const imgs = Array.from(seq.querySelectorAll("img"));
-    const lines = cap ? Array.from(cap.querySelectorAll(".capLine")) : [];
+  const imgs = Array.from(seq.querySelectorAll("img"));
+  const lines = cap ? Array.from(cap.querySelectorAll(".capLine")) : [];
 
-    console.log("[STEP2] startStep2PhotoSequence imgs =", imgs.length, "| lines =", lines.length);
+  if (imgs.length <= 1) return;
 
-    if (imgs.length <= 1) return;
+  // ✅ limpa timers antigos (se já existiam)
+  if (photo2Timer) clearInterval(photo2Timer);
+  if (cap2Timer) clearInterval(cap2Timer);
+  photo2Timer = null;
+  cap2Timer = null;
 
-    if (photo2Timer) clearInterval(photo2Timer);
-    if (cap2Timer) clearInterval(cap2Timer);
-
-    function setActivePhoto(i) {
-      imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
-    }
-
-    function setActiveCaption(i) {
-      if (!lines.length) return;
-      lines.forEach((ln, idx) => ln.classList.toggle("active", idx === i));
-    }
-
-    photo2Index = 0;
-    cap2Index = 0;
-    setActivePhoto(photo2Index);
-    setActiveCaption(cap2Index);
-
-    photo2Timer = setInterval(() => {
-      photo2Index = (photo2Index + 1) % imgs.length;
-      setActivePhoto(photo2Index);
-    }, 2500);
-
-    if (lines.length > 1) {
-      cap2Timer = setInterval(() => {
-        cap2Index = (cap2Index + 1) % lines.length;
-        setActiveCaption(cap2Index);
-      }, 6000);
-    }
-
-    seq.onclick = () => {
-      photo2Index = (photo2Index + 1) % imgs.length;
-      setActivePhoto(photo2Index);
-    };
+  function setActivePhoto(i) {
+    imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
   }
 
-  // ======= CLUSTER + CONTACT CHECK =======
+  function setActiveCaption(i) {
+    if (!lines.length) return;
+    lines.forEach((ln, idx) => ln.classList.toggle("active", idx === i));
+  }
+
+  // ✅ reset índices
+  photo2Index = 0;
+  cap2Index = 0;
+  setActivePhoto(photo2Index);
+  setActiveCaption(cap2Index);
+
+  // ✅ timers
+  photo2Timer = setInterval(() => {
+    photo2Index = (photo2Index + 1) % imgs.length;
+    setActivePhoto(photo2Index);
+  }, 2500);
+
+  if (lines.length > 1) {
+    cap2Timer = setInterval(() => {
+      cap2Index = (cap2Index + 1) % lines.length;
+      setActiveCaption(cap2Index);
+    }, 6000);
+  }
+
+  // ✅ não acumular clique
+  seq.onclick = null;
+  seq.onclick = () => {
+    photo2Index = (photo2Index + 1) % imgs.length;
+    setActivePhoto(photo2Index);
+  };
+
+  // ✅ expõe cleanup pro restart / troca de tela
+  window.__step2Cleanup = () => {
+    if (photo2Timer) clearInterval(photo2Timer);
+    if (cap2Timer) clearInterval(cap2Timer);
+    photo2Timer = null;
+    cap2Timer = null;
+    seq.onclick = null;
+    console.log("[STEP2] cleanup sequence ✅");
+  };
+}
+
+
   function checkClusterAndUnlock() {
     const active = pieceEls.filter(el => el.style.display !== "none");
     if (active.length < 3) return;
@@ -487,26 +605,21 @@ setupFinalPhotosDebug();
     const o02 = overlapRatio(rects[0], rects[2]);
     const o12 = overlapRatio(rects[1], rects[2]);
 
-    const touchingPairs = [
-      o01 >= MIN_OVERLAP_RATIO,
-      o02 >= MIN_OVERLAP_RATIO,
-      o12 >= MIN_OVERLAP_RATIO
-    ].filter(Boolean).length;
+    const touchingPairs = [o01 >= MIN_OVERLAP_RATIO, o02 >= MIN_OVERLAP_RATIO, o12 >= MIN_OVERLAP_RATIO]
+      .filter(Boolean).length;
 
     const clusterOk = maxDist <= CLUSTER_DIST;
     const touchOk = touchingPairs >= REQUIRED_TOUCHING_PAIRS;
 
-    logGroup("🔍 STEP2 checkClusterAndUnlock()", () => {
+    logGroup("🔍 STEP2 check", () => {
       console.log("maxDist:", fmt(maxDist), "clusterDist:", fmt(CLUSTER_DIST), "clusterOk:", clusterOk);
-      console.log("overlap:", fmt(o01), fmt(o02), fmt(o12), "touchingPairs:", touchingPairs, "touchOk:", touchOk);
+      console.log("overlap:", fmt(o01), fmt(o02), fmt(o12), "touchPairs:", touchingPairs, "touchOk:", touchOk);
     });
 
     if (clusterOk && touchOk) unlockStep2();
   }
 
   function unlockStep2() {
-    console.log("[STEP2] unlockStep2 chamado");
-
     if (step2Done) return;
     step2Done = true;
 
@@ -515,34 +628,41 @@ setupFinalPhotosDebug();
     pieceEls.forEach(el => el.style.display = "none");
 
     if (b2) b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
-
     if (to3) {
       to3.classList.remove("locked");
       to3.disabled = false;
     }
 
     setDone(2);
+    console.log("[STEP2] concluído ✅");
+  }
 
-    console.log("[STEP2] concluído ✅ — botão Ir pro último liberado");
+  // re-hidrata se já estava feito
+  if (step2Done) {
+    if (assembled) assembled.style.display = "block";
+    startStep2PhotoSequence();
+    if (b2) b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+    if (to3) { to3.classList.remove("locked"); to3.disabled = false; }
+    pieceEls.forEach(el => el.style.display = "none");
   }
 
   if (to3) {
     to3.addEventListener("click", () => {
-      console.log("[STEP2] clicar -> ir step3");
-      goToStep(3);
+      console.log("[STEP2] ir step3");
+      setStep(3);
     });
   }
-})();
+
+  // primeiro layout (pode falhar se view ainda hidden — por isso render chama __step2Relayout)
+  layoutPieces();
+}
 
 // =====================
-// STEP 3
+// STEP 3 (SEU CÓDIGO)
 // =====================
-(function initStep3() {
+function initStep3() {
   const holdBtn = $("holdBtn");
-  if (!holdBtn) {
-    console.log("[STEP3] não é esta página, pulando init.");
-    return;
-  }
+  if (!holdBtn) return;
 
   console.log("[STEP3] init ✅");
 
@@ -555,7 +675,7 @@ setupFinalPhotosDebug();
   let holding = false;
   let t0 = 0;
   let raf = null;
-  let step3Done = false;
+  let step3Done = getProgress().step3Done;
 
   function tick() {
     if (!holding) return;
@@ -590,34 +710,18 @@ setupFinalPhotosDebug();
     if (holdText) holdText.textContent = "Pressione e segure 💛";
   }
 
-  // Typewriter (mantém seus logs)
   function typeHTML(el, html, { speed = 18, pauseDot = 240, pauseComma = 120 } = {}) {
-    console.log("[TYPE] start typeHTML");
-    console.log("[TYPE] target element:", el);
-    console.log("[TYPE] html length:", html?.length);
-
-    if (!el) {
-      console.error("[TYPE] ERRO: elemento alvo não existe");
-      return;
-    }
-    if (!html) {
-      console.error("[TYPE] ERRO: html vazio ou undefined");
-      return;
-    }
+    if (!el || !html) return;
 
     let i = 0;
     el.innerHTML = "";
 
     function step() {
-      if (i >= html.length) {
-        console.log("[TYPE] typing finished");
-        return;
-      }
+      if (i >= html.length) return;
 
       if (html[i] === "<") {
         const end = html.indexOf(">", i);
         if (end === -1) return;
-
         el.innerHTML += html.slice(i, end + 1);
         i = end + 1;
         return setTimeout(step, 0);
@@ -637,71 +741,43 @@ setupFinalPhotosDebug();
     step();
   }
 
-  // Fotos finais com clique (com z-index e object-position por data-pos)
   let finalPhotoIndex = 0;
 
   function startFinalPhotoSequence() {
-    console.log("[FINAL] startFinalPhotoSequence() chamado");
-
-    const wrap = document.getElementById("finalPhotos");
-    if (!wrap) {
-      console.warn("[FINAL] ERRO: #finalPhotos não existe");
-      return;
-    }
+    const wrap = $("finalPhotos");
+    if (!wrap) return;
 
     const pics = Array.from(wrap.querySelectorAll(".finalPic"));
-    console.log("[FINAL] fotos encontradas:", pics.length);
-
-    if (pics.length === 0) {
-      console.warn("[FINAL] ERRO: nenhuma .finalPic dentro de #finalPhotos");
-      return;
-    }
+    if (pics.length === 0) return;
 
     function setActive(i) {
       const safeIndex = ((i % pics.length) + pics.length) % pics.length;
       const activePic = pics[safeIndex];
 
       const pos = activePic?.dataset?.pos || "center center";
-      const anim = activePic?.dataset?.anim || "none";
 
       pics.forEach((img, idx) => {
         const isActive = idx === safeIndex;
         img.classList.toggle("active", isActive);
-
-        // garante ordem correta
         img.style.zIndex = isActive ? "5" : "1";
-
-        // aplica object-position apenas na ativa
         if (isActive) img.style.objectPosition = pos;
       });
 
       finalPhotoIndex = safeIndex;
-      console.log("[FINAL] active =", safeIndex, "| anim =", anim, "| pos =", pos);
     }
 
     finalPhotoIndex = 0;
     setActive(finalPhotoIndex);
 
-    // evita acumular handlers
-    wrap.onclick = null;
-
     wrap.onclick = () => {
       const next = (finalPhotoIndex + 1) % pics.length;
-      console.log("[FINAL] clique -> next =", next);
       setActive(next);
       if (navigator.vibrate) navigator.vibrate(12);
     };
-
-    console.log("[FINAL] clique configurado ✅");
   }
 
   function completeStep3() {
-    console.log("[STEP3] completeStep3 chamado");
-
-    if (step3Done) {
-      console.log("[STEP3] já estava concluído");
-      return;
-    }
+    if (step3Done) return;
 
     step3Done = true;
     holding = false;
@@ -711,70 +787,58 @@ setupFinalPhotosDebug();
     if (holdText) holdText.textContent = "Aberto ✅";
     if (b3) b3.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
 
-    if (!final) {
-      console.error("[STEP3] ERRO: #final não existe");
-      return;
-    }
+    if (!final) return;
 
     final.style.display = "block";
     final.classList.add("open");
-    console.log("[STEP3] final.classList =", final.className);
 
-    final.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const typed = $("letterTyped");
+    const giftRow = $("giftRow");
 
-    const typed = document.getElementById("letterTyped");
-    const giftRow = document.getElementById("giftRow");
+    if (typed) {
+      typed.innerHTML = "";
+      final.classList.remove("doneTyping");
+      typeHTML(typed, config.letterHTML, { speed: 18, pauseDot: 260, pauseComma: 120 });
 
-    console.log("[STEP3] letterTyped encontrado?", !!typed);
-    console.log("[STEP3] config.letterHTML existe?", !!config.letterHTML);
-    console.log("[STEP3] giftRow encontrado?", !!giftRow);
+      const approxMs = Math.max(1500, config.letterHTML.length * 18);
+      const rewardAt = Math.max(350, approxMs - 150);
 
-    if (!typed) {
-      console.error("[STEP3] ERRO: #letterTyped não existe no DOM");
-      return;
+      setTimeout(() => {
+        final.classList.add("showPhoto");
+        startFinalPhotoSequence();
+        if (giftRow) {
+          giftRow.style.display = "block";
+          giftRow.classList.remove("pop");
+          void giftRow.offsetWidth;
+          giftRow.classList.add("pop");
+        }
+      }, rewardAt);
+
+      setTimeout(() => {
+        final.classList.add("doneTyping");
+      }, approxMs);
     }
-
-    typed.innerHTML = "";
-    final.classList.remove("doneTyping");
-
-    console.log("[STEP3] iniciando typewriter...");
-    typeHTML(typed, config.letterHTML, {
-      speed: 18,
-      pauseDot: 260,
-      pauseComma: 120
-    });
-
-    const approxMs = Math.max(1500, config.letterHTML.length * 18);
-    const rewardAt = Math.max(350, approxMs - 150);
-
-    console.log("[STEP3] approxMs =", approxMs, "| rewardAt =", rewardAt);
-
-    // momento reward: aparece foto + pop + habilita clique das fotos
-    setTimeout(() => {
-      final.classList.add("showPhoto");
-      console.log("[STEP3] showPhoto aplicado ✅", final.className);
-
-      startFinalPhotoSequence();
-
-      if (giftRow) {
-        giftRow.style.display = "block";
-        giftRow.classList.remove("pop");
-        void giftRow.offsetWidth;
-        giftRow.classList.add("pop");
-        console.log("[STEP3] giftRow pop ✅");
-      }
-    }, rewardAt);
-
-    setTimeout(() => {
-      final.classList.add("doneTyping");
-      console.log("[STEP3] typing finalizado");
-    }, approxMs);
 
     setDone(3);
     console.log("[STEP3] concluído ✅");
-
     if (navigator.vibrate) navigator.vibrate([40, 30, 40, 30, 70]);
   }
+
+  // re-hidrata se já estava feito
+  if (step3Done) {
+    if (final) {
+      final.style.display = "block";
+      final.classList.add("open", "showPhoto", "doneTyping");
+    }
+    if (b3) b3.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+    if (holdText) holdText.textContent = "Aberto ✅";
+  }
+
+  const restartBtn = document.getElementById("restartBtn");
+  if (restartBtn) restartBtn.addEventListener("click", restartExperience);
+
+
+  
 
   // binds hold
   holdBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startHold(); }, { passive: false });
@@ -782,4 +846,4 @@ setupFinalPhotosDebug();
   holdBtn.addEventListener("touchcancel", () => cancelHold(), { passive: true });
   holdBtn.addEventListener("mousedown", () => startHold());
   window.addEventListener("mouseup", () => cancelHold());
-})();
+}
