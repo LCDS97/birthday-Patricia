@@ -17,7 +17,7 @@ const $ = (id) => document.getElementById(id);
 // =====================
 const config = {
   herName: "MEU AMOR",
-  photo1: "fotos/Step-Foto1.jpeg",
+  photo1: "fotos/Step1-Foto1.jpeg",
 
   // Step2 - blocos do quebra-cabeça
   block1: "./fotos/Step2-Foto1-Bloco1.jpeg",
@@ -270,6 +270,52 @@ document.addEventListener("DOMContentLoaded", () => {
 // =====================
 // STEP 1 (SEU CÓDIGO)
 // =====================
+
+let step1Timer = null;
+let step1Index = 0;
+
+function startStep1Sequence() {
+  const seq = document.getElementById("step1Seq");
+  if (!seq) return;
+
+  const imgs = Array.from(seq.querySelectorAll("img"));
+  if (imgs.length <= 1) return;
+
+  if (step1Timer) clearInterval(step1Timer);
+  step1Timer = null;
+
+function setActive(i){
+  const safe = ((i % imgs.length) + imgs.length) % imgs.length;
+
+  imgs.forEach((img, idx) => {
+    const isActive = idx === safe;
+    img.classList.toggle("active", isActive);
+
+    if (isActive) {
+      const pos = img.dataset.pos || "center center";
+      img.style.objectPosition = pos;
+    }
+  });
+}
+
+
+  step1Index = 0;
+  setActive(step1Index);
+
+  step1Timer = setInterval(() => {
+    step1Index = (step1Index + 1) % imgs.length;
+    setActive(step1Index);
+  }, 4200); // mais “calmo”
+
+  // clique avança também
+  seq.onclick = null;
+  seq.onclick = () => {
+    step1Index = (step1Index + 1) % imgs.length;
+    setActive(step1Index);
+  };
+}
+
+
 function initStep1() {
   const heartField = $("heartField");
   if (!heartField) return;
@@ -318,21 +364,43 @@ function initStep1() {
     return d;
   }
 
+  // function completeStep1() {
+  //   if (step1Done) return;
+  //   step1Done = true;
+
+  //   if (reveal1) reveal1.style.display = "block";
+  //   if (b1) b1.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+
+  //   if (to2) {
+  //     to2.classList.remove("locked");
+  //     to2.disabled = false;
+  //   }
+
+  //   setDone(1);
+  //   console.log("[STEP1] concluído ✅");
+  // }
   function completeStep1() {
-    if (step1Done) return;
-    step1Done = true;
+  if (step1Done) return;
+  step1Done = true;
 
-    if (reveal1) reveal1.style.display = "block";
-    if (b1) b1.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+  if (reveal1) {
+    reveal1.style.display = "block";
 
-    if (to2) {
-      to2.classList.remove("locked");
-      to2.disabled = false;
-    }
+    // força reflow pra transição do clip-path pegar sempre
+    void reveal1.offsetWidth;
 
-    setDone(1);
-    console.log("[STEP1] concluído ✅");
+    // abre a máscara
+    reveal1.classList.add("revealed");
   }
+
+  // inicia troca das fotos
+  startStep1Sequence();
+
+  if (b1) b1.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+  if (to2) { to2.classList.remove("locked"); to2.disabled = false; }
+
+  setDone(1);
+}
 
   // se já estava feito, re-hidrata UI
   if (step1Done) {
