@@ -590,7 +590,68 @@ function initStep2() {
   let photo2Index = 0;
   let cap2Index = 0;
 
-  function startStep2PhotoSequence() {
+//   function startStep2PhotoSequence() {
+//   const seq = $("photo2Seq");
+//   const cap = $("cap2");
+//   if (!seq) return;
+
+//   const imgs = Array.from(seq.querySelectorAll("img"));
+//   const lines = cap ? Array.from(cap.querySelectorAll(".capLine")) : [];
+
+//   if (imgs.length <= 1) return;
+
+//   // ✅ limpa timers antigos (se já existiam)
+//   if (photo2Timer) clearInterval(photo2Timer);
+//   if (cap2Timer) clearInterval(cap2Timer);
+//   photo2Timer = null;
+//   cap2Timer = null;
+
+//   function setActivePhoto(i) {
+//     imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
+//   }
+
+//   function setActiveCaption(i) {
+//     if (!lines.length) return;
+//     lines.forEach((ln, idx) => ln.classList.toggle("active", idx === i));
+//   }
+
+//   // ✅ reset índices
+//   photo2Index = 0;
+//   cap2Index = 0;
+//   setActivePhoto(photo2Index);
+//   setActiveCaption(cap2Index);
+
+//   // ✅ timers
+//   photo2Timer = setInterval(() => {
+//     photo2Index = (photo2Index + 1) % imgs.length;
+//     setActivePhoto(photo2Index);
+//   }, 2500);
+
+//   if (lines.length > 1) {
+//     cap2Timer = setInterval(() => {
+//       cap2Index = (cap2Index + 1) % lines.length;
+//       setActiveCaption(cap2Index);
+//     }, 6000);
+//   }
+
+//   // ✅ não acumular clique
+//   seq.onclick = null;
+//   seq.onclick = () => {
+//     photo2Index = (photo2Index + 1) % imgs.length;
+//     setActivePhoto(photo2Index);
+//   };
+
+//   // ✅ expõe cleanup pro restart / troca de tela
+//   window.__step2Cleanup = () => {
+//     if (photo2Timer) clearInterval(photo2Timer);
+//     if (cap2Timer) clearInterval(cap2Timer);
+//     photo2Timer = null;
+//     cap2Timer = null;
+//     seq.onclick = null;
+//     console.log("[STEP2] cleanup sequence ✅");
+//   };
+// }
+function startStep2PhotoSequence() {
   const seq = $("photo2Seq");
   const cap = $("cap2");
   if (!seq) return;
@@ -600,57 +661,42 @@ function initStep2() {
 
   if (imgs.length <= 1) return;
 
-  // ✅ limpa timers antigos (se já existiam)
   if (photo2Timer) clearInterval(photo2Timer);
-  if (cap2Timer) clearInterval(cap2Timer);
-  photo2Timer = null;
-  cap2Timer = null;
 
   function setActivePhoto(i) {
     imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
   }
 
-  function setActiveCaption(i) {
+  function setActiveCaptionByPhotoIndex(photoIndex) {
     if (!lines.length) return;
-    lines.forEach((ln, idx) => ln.classList.toggle("active", idx === i));
+
+    // 2 fotos por frase (0-1, 2-3, 4-5...)
+    const captionIndex = Math.min(lines.length - 1, Math.floor(photoIndex / 2));
+
+    lines.forEach((ln, idx) => ln.classList.toggle("active", idx === captionIndex));
   }
 
-  // ✅ reset índices
   photo2Index = 0;
-  cap2Index = 0;
   setActivePhoto(photo2Index);
-  setActiveCaption(cap2Index);
+  setActiveCaptionByPhotoIndex(photo2Index);
 
-  // ✅ timers
+  const PHOTO_MS = 2500; // tempo entre fotos (ajuste aqui)
+
   photo2Timer = setInterval(() => {
     photo2Index = (photo2Index + 1) % imgs.length;
     setActivePhoto(photo2Index);
-  }, 2500);
+    setActiveCaptionByPhotoIndex(photo2Index);
+  }, PHOTO_MS);
 
-  if (lines.length > 1) {
-    cap2Timer = setInterval(() => {
-      cap2Index = (cap2Index + 1) % lines.length;
-      setActiveCaption(cap2Index);
-    }, 6000);
-  }
-
-  // ✅ não acumular clique
-  seq.onclick = null;
+  // Se quiser permitir clique pra avançar, mantém.
+  // Se NÃO quiser clique, remove esse bloco:
   seq.onclick = () => {
     photo2Index = (photo2Index + 1) % imgs.length;
     setActivePhoto(photo2Index);
-  };
-
-  // ✅ expõe cleanup pro restart / troca de tela
-  window.__step2Cleanup = () => {
-    if (photo2Timer) clearInterval(photo2Timer);
-    if (cap2Timer) clearInterval(cap2Timer);
-    photo2Timer = null;
-    cap2Timer = null;
-    seq.onclick = null;
-    console.log("[STEP2] cleanup sequence ✅");
+    setActiveCaptionByPhotoIndex(photo2Index);
   };
 }
+
 
 
   function checkClusterAndUnlock() {
