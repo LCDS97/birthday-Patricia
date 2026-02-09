@@ -24,7 +24,22 @@ const config = {
   block2: "./fotos/Step2-Foto2-Bloco2.jpeg",
   block3: "./fotos/Step2-Foto3-Bloco3.jpeg",
 
-  cap1: "Você é minha paz e minha bagunça boa.<br/>E eu adoro como tudo fica mais leve quando é com você.",
+  // cap1: "Você é minha paz e minha bagunça boa.<br/>E eu adoro como tudo fica mais leve quando é com você.",
+
+  step1Photos: [
+  "./fotos/Step1-Foto1.jpeg",
+  "./fotos/Step1-Foto2.jpeg",
+  "./fotos/Step1-Foto3.jpeg",
+  "./fotos/Step1-Foto4.jpeg",
+  "./fotos/Step1-Foto5.jpeg",
+  "./fotos/Step1-Foto6.jpeg",
+],
+
+cap1Lines: [
+  "Você é minha paz e minha bagunça boa.<br/>E eu adoro como tudo fica mais leve quando é com você.",
+  "Segunda frase aqui…<br/>com o mesmo estilo 💛",
+  "Terceira frase aqui…<br/>pra fechar forte 😌"
+],
 
   cap2Lines: [
     "<b>Eu guardo você em detalhes.</b><br/>Nos dias bons, nos dias difíceis, e principalmente nos dias comuns.",
@@ -130,12 +145,26 @@ function applyConfig() {
   const photo1El = $("photo1");
   if (photo1El) safeSetImg(photo1El, config.photo1, photo1El.src);
 
-  const cap1El = $("cap1");
-  if (cap1El) cap1El.innerHTML = config.cap1;
+  // const cap1El = $("cap1");
+  // if (cap1El) cap1El.innerHTML = config.cap1;
 
+  renderCap1Lines();
   renderCap2Lines();
   console.log("[CONFIG] aplicado ✅");
 }
+
+function renderCap1Lines() {
+  const el = $("cap1");
+  if (!el) return;
+
+  const lines = config.cap1Lines?.length ? config.cap1Lines : [config.cap1 || ""];
+  el.innerHTML = lines
+    .map((html) => `<div class="capLine">${html}</div>`)
+    .join("");
+}
+
+renderCap1Lines();
+
 
 // =====================
 // RENDER (mostra/esconde views)
@@ -271,49 +300,50 @@ document.addEventListener("DOMContentLoaded", () => {
 // STEP 1 (SEU CÓDIGO)
 // =====================
 
-let step1Timer = null;
-let step1Index = 0;
+let step1PhotoTimer = null;
+let step1PhotoIndex = 0;
 
-function startStep1Sequence() {
+function startStep1PhotoSequence() {
   const seq = document.getElementById("step1Seq");
-  if (!seq) return;
+  const cap = document.getElementById("cap1");
+  if (!seq || !cap) return;
 
   const imgs = Array.from(seq.querySelectorAll("img"));
-  if (imgs.length <= 1) return;
+  const lines = Array.from(cap.querySelectorAll(".capLine"));
+  if (imgs.length < 2) return;
 
-  if (step1Timer) clearInterval(step1Timer);
-  step1Timer = null;
+  const PHOTO_MS = 2500;
 
-function setActive(i){
-  const safe = ((i % imgs.length) + imgs.length) % imgs.length;
+  function setActivePhoto(i) {
+    imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
+  }
 
-  imgs.forEach((img, idx) => {
-    const isActive = idx === safe;
-    img.classList.toggle("active", isActive);
+  function revealLine(i) {
+    if (!lines[i]) return;
+    // ✅ garante que a transição vai disparar mesmo na primeira vez
+    requestAnimationFrame(() => lines[i].classList.add("shown"));
+  }
 
-    if (isActive) {
-      const pos = img.dataset.pos || "center center";
-      img.style.objectPosition = pos;
-    }
-  });
+  // estado inicial
+  lines.forEach(l => l.classList.remove("shown")); // <- importante
+  setActivePhoto(0);
+
+  // força reflow antes do fade
+  void cap.offsetWidth;
+
+  revealLine(0); // ✅ frase 1 agora faz fade-in também
+
+  if (step1PhotoTimer) clearInterval(step1PhotoTimer);
+
+  step1PhotoTimer = setInterval(() => {
+    step1PhotoIndex = (step1PhotoIndex + 1) % imgs.length;
+    setActivePhoto(step1PhotoIndex);
+
+    if (step1PhotoIndex === 2) revealLine(1); // foto 3
+    if (step1PhotoIndex === 4) revealLine(2); // foto 5
+  }, PHOTO_MS);
 }
 
-
-  step1Index = 0;
-  setActive(step1Index);
-
-  step1Timer = setInterval(() => {
-    step1Index = (step1Index + 1) % imgs.length;
-    setActive(step1Index);
-  }, 4200); // mais “calmo”
-
-  // clique avança também
-  seq.onclick = null;
-  seq.onclick = () => {
-    step1Index = (step1Index + 1) % imgs.length;
-    setActive(step1Index);
-  };
-}
 
 
 function initStep1() {
@@ -385,7 +415,7 @@ function initStep1() {
 
   if (reveal1) {
     reveal1.style.display = "block";
-
+    // startStep1PhotoSequence();
     // força reflow pra transição do clip-path pegar sempre
     void reveal1.offsetWidth;
 
@@ -394,13 +424,54 @@ function initStep1() {
   }
 
   // inicia troca das fotos
-  startStep1Sequence();
+  startStep1PhotoSequence();
 
   if (b1) b1.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
   if (to2) { to2.classList.remove("locked"); to2.disabled = false; }
 
   setDone(1);
 }
+
+// let step1PhotoTimer = null;
+// let step1PhotoIndex = 0;
+
+// function startStep1PhotoSequence() {
+//   const seq = document.getElementById("photo1Seq"); // container das 6 imgs
+//   const cap = document.getElementById("cap1");
+//   if (!seq || !cap) return;
+
+//   const imgs = Array.from(seq.querySelectorAll("img"));
+//   const lines = Array.from(cap.querySelectorAll(".capLine"));
+
+//   if (imgs.length < 2) return;
+
+//   const PHOTO_MS = 2500;
+
+//   function setActivePhoto(i) {
+//     imgs.forEach((img, idx) => img.classList.toggle("active", idx === i));
+//   }
+
+//   function revealLine(i) {
+//     if (lines[i]) lines[i].classList.add("shown");
+//   }
+
+//   // estado inicial
+//   step1PhotoIndex = 0;
+//   setActivePhoto(0);
+//   revealLine(0); // frase 1 já fica
+
+//   if (step1PhotoTimer) clearInterval(step1PhotoTimer);
+
+//   step1PhotoTimer = setInterval(() => {
+//     step1PhotoIndex = (step1PhotoIndex + 1) % imgs.length;
+//     setActivePhoto(step1PhotoIndex);
+
+//     // a cada 2 fotos, revela mais uma frase (2->linha2, 4->linha3)
+//     if (step1PhotoIndex === 2) revealLine(1); // foto 3
+//     if (step1PhotoIndex === 4) revealLine(2); // foto 5
+//   }, PHOTO_MS);
+// }
+
 
   // se já estava feito, re-hidrata UI
   if (step1Done) {
