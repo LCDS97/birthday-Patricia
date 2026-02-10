@@ -786,7 +786,6 @@ function startStep2PhotoSequence() {
 
   const imgs = Array.from(seq.querySelectorAll("img"));
   const lines = cap ? Array.from(cap.querySelectorAll(".capLine")) : [];
-
   if (imgs.length <= 1) return;
 
   if (photo2Timer) clearInterval(photo2Timer);
@@ -797,18 +796,16 @@ function startStep2PhotoSequence() {
 
   function setActiveCaptionByPhotoIndex(photoIndex) {
     if (!lines.length) return;
-
-    // 2 fotos por frase (0-1, 2-3, 4-5...)
     const captionIndex = Math.min(lines.length - 1, Math.floor(photoIndex / 2));
-
     lines.forEach((ln, idx) => ln.classList.toggle("active", idx === captionIndex));
   }
 
+  // ✅ PRIMEIRO FRAME FORÇADO (foto 1 + frase 1)
   photo2Index = 0;
-  setActivePhoto(photo2Index);
-  setActiveCaptionByPhotoIndex(photo2Index);
+  setActivePhoto(0);
+  setActiveCaptionByPhotoIndex(0);
 
-  const PHOTO_MS = 2500; // tempo entre fotos (ajuste aqui)
+  const PHOTO_MS = 2500;
 
   photo2Timer = setInterval(() => {
     photo2Index = (photo2Index + 1) % imgs.length;
@@ -816,14 +813,10 @@ function startStep2PhotoSequence() {
     setActiveCaptionByPhotoIndex(photo2Index);
   }, PHOTO_MS);
 
-  // Se quiser permitir clique pra avançar, mantém.
-  // Se NÃO quiser clique, remove esse bloco:
-  seq.onclick = () => {
-    photo2Index = (photo2Index + 1) % imgs.length;
-    setActivePhoto(photo2Index);
-    setActiveCaptionByPhotoIndex(photo2Index);
-  };
+  // se você NÃO quer clique opcional:
+  seq.onclick = null;
 }
+
 
 
 
@@ -861,23 +854,40 @@ function startStep2PhotoSequence() {
     if (clusterOk && touchOk) unlockStep2();
   }
 
-  function unlockStep2() {
-    if (step2Done) return;
-    step2Done = true;
+function unlockStep2() {
+  if (step2Done) return;
+  step2Done = true;
 
-    if (assembled) assembled.style.display = "block";
-    startStep2PhotoSequence();
-    pieceEls.forEach(el => el.style.display = "none");
+  pieceEls.forEach(el => el.style.display = "none");
 
-    if (b2) b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
-    if (to3) {
-      to3.classList.remove("locked");
-      to3.disabled = false;
-    }
+  if (assembled) {
+    assembled.style.display = "block";
 
-    setDone(2);
-    console.log("[STEP2] concluído ✅");
+    // trava fotos + frases
+    assembled.classList.add("preReveal");
+
+    // toca sfx
+    SFX.play("sfx-unlock", { volume: 0.9, restart: true });
+
+    // flash
+    assembled.classList.remove("revealing");
+    void assembled.offsetWidth;
+    assembled.classList.add("revealing");
+
+    const REVEAL_MS = 650;
+    setTimeout(() => {
+      // libera fotos + frase (e já seta foto 1 + frase 1 dentro da função)
+      assembled.classList.remove("preReveal");
+      startStep2PhotoSequence();
+    }, REVEAL_MS);
   }
+
+  if (b2) b2.innerHTML = "✅ <span class='doneMark'>Aberto</span>";
+  if (to3) { to3.classList.remove("locked"); to3.disabled = false; }
+
+  setDone(2);
+}
+
 
   // re-hidrata se já estava feito
   if (step2Done) {

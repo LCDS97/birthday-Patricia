@@ -280,6 +280,8 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   display:none;
   background:#000;
 }
+
+
 .assembled img{ width:100%; height:100%; object-fit:cover; display:block; }
 .assembled .overlay{
   position:absolute; left:0; right:0; bottom:0;
@@ -297,6 +299,43 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   transition: opacity .8s ease;
 }
 #assembled .photoSequence img.active{ opacity:1; }
+
+#assembled .revealFlash{
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 16px;
+  /* brilho */
+  background:
+    radial-gradient(400px 240px at 30% 30%, rgba(255,90,122,.55), transparent 60%),
+    radial-gradient(420px 260px at 75% 35%, rgba(124,247,255,.45), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0));
+  filter: blur(1px);
+  mix-blend-mode: screen;
+}
+
+#assembled.revealing .revealFlash{
+  animation: flashPop 650ms ease-out;
+}
+
+@keyframes flashPop{
+  0%   { opacity: 0; transform: scale(1.02); }
+  35%  { opacity: 1; transform: scale(1.00); }
+  100% { opacity: 0; transform: scale(1.01); }
+}
+
+/* “segura” as fotos invisíveis até a revelação */
+#assembled.preReveal #photo2Seq img{
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+#assembled.preReveal #cap2 .capLine{
+  opacity: 0 !important;
+  transform: translateY(10px) !important;
+  transition: none !important;
+}
 
 #cap2{
   position:absolute;
