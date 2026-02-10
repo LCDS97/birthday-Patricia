@@ -658,4 +658,47 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
   text-shadow: 0 2px 6px rgba(0,0,0,.6);
 }
 
+/* Linhas estilo GTA */
+.mission-overlay .gta-line{
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+/* “MISSION PASSED!” amarelo/laranja com contorno preto */
+.mission-overlay .gta-mission{
+  font-size: 18px;
+  color: #ffb000;
+  text-shadow:
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0px  3px 8px rgba(0,0,0,.7);
+}
+
+/* “RESPECT +” branco com contorno preto (bem forte) */
+.mission-overlay .gta-respect{
+  font-size: 16px;
+  color: #ffffff;
+  margin-top: 6px;
+text-shadow:
+  -3px -3px 0 #000,
+   3px -3px 0 #000,
+  -3px  3px 0 #000,
+   3px  3px 0 #000,
+   0px  4px 10px rgba(0,0,0,.75);
+}
+
+/* seu subtexto normal, mais legível */
+.mission-overlay .mission-sub{
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.25;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+
 
