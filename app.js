@@ -88,23 +88,44 @@ const config = {
 ],
 
 cap1Lines: [
-  "Você é minha paz e minha bagunça boa.<br/>E eu adoro como tudo fica mais leve quando é com você.",
-  "Segunda frase aqui…<br/>com o mesmo estilo 💛",
-  "Terceira frase aqui…<br/>pra fechar forte 😌"
+  "Sempre que eu olho para você, meu coração lembra que está vivo.",
+  "Ele bate mais forte, mas também mais leve, assim como seu sorriso que ilumina até os meus dias mais nublados.",
+  "Eu me sinto tão sortudo por ter você ao meu lado, compartilhando risadas, sonhos e até mesmo os momentos silenciosos que dizem tanto sem precisar de palavras."
 ],
 
   cap2Lines: [
-    "<b>Eu guardo você em detalhes.</b><br/>Nos dias bons, nos dias difíceis, e principalmente nos dias comuns.",
-    "<b>Você é minha paz e minha bagunça boa.</b><br/>E eu adoro como tudo fica mais leve quando é com você.",
-    "<b>Ela é bravinha, e eu sorrio por isso.</b><br/>Porque é dessa força que vem o cuidado e a vontade de evoluir juntos."
+    "<b>Com você, qualquer lugar vira especial...</b><br/>Seja algo novo ou só um dia comum, eu aproveito sua companhia.",
+    "<b>Não importa se é uma aventura que eu nunca vivi...</b><br/>Ou se é só ficar sem fazer nada, com você sempre vale.",
+    "<b>Eu amo viver coisas novas com você...</b><br/>E eu também amo viver as mesmas coisas de sempre, porque com você tudo tem um sabor diferente, mais doce, mais leve, mais meu."
   ],
 
   letterHTML: `
-    <b>Meu amor, feliz aniversário.</b><br/><br/>
-    Hoje eu só quero te lembrar do óbvio: você é uma das melhores partes da minha vida.
-    Obrigado por existir do seu jeitinho, por me escolher, por me ensinar, por me acalmar e por me fazer querer ser melhor.<br/><br/>
-    Eu amo você com calma e com intensidade — e eu quero construir mais e mais momentos com você.<br/><br/>
-    <div class="small">PS: eu te amo. Muito.</div>
+  <b>Meu amor, feliz aniversário.</b><br/><br/>
+
+  Hoje eu só quero te lembrar do óbvio: você é uma das melhores partes da minha vida.<br/>
+  Sou uma pessoa muito sortuda por ter você.<br/>
+  Alguém que topa dividir sonhos e me faz evoluir todos os dias.<br/><br/>
+
+  Ao seu lado, eu aprendo o que é amar de verdade e valorizar o que importa.<br/>
+  Dos nossos passeios de bike até a comida boa depois.<br/>
+  De treinar, suar e sofrer juntos.<br/>
+  De jogar, rir e competir como crianças.<br/><br/>
+
+  Nos melhores e piores momentos da minha vida, é em você que eu encontro luz.<br/>
+  Um conforto surreal, como eu nunca senti antes.<br/><br/>
+
+  Obrigado por existir do seu jeitinho.<br/>
+  Por me escolher, por me ensinar, por me acalmar<br/>
+  e por me fazer querer ser melhor.<br/><br/>
+
+  Eu amo você com calma e com intensidade.<br/>
+  E quero construir cada vez mais momentos ao seu lado.<br/><br/>
+
+  Feliz aniversário, meu amor.<br/>
+  Que essa dedicatória não consiga expressar nem metade<br/>
+  do amor imenso que eu sinto por você.<br/><br/>
+
+  <div class="small">PS: eu te amo. Muito.</div>
   `
 };
 
@@ -1068,6 +1089,8 @@ function startFinalPhotoSequence() {
     final.style.display = "block";
     final.classList.add("open");
 
+    SFX.play("sfx-completed", { volume: 0.95, restart: true });
+    
     const typed = $("letterTyped");
     const giftRow = $("giftRow");
 
