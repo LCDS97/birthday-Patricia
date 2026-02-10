@@ -1094,13 +1094,23 @@ function startFinalPhotoSequence() {
     const typed = $("letterTyped");
     const giftRow = $("giftRow");
 
+    const mission = document.getElementById("missionOverlay");
+    if (mission) mission.classList.add("show");
+
+
     if (typed) {
       typed.innerHTML = '<span class="cursor" id="cursor">|</span>';
       final.classList.remove("doneTyping");
-      typeHTML(typed, config.letterHTML, { speed: 18, pauseDot: 260, pauseComma: 120 });
+      typeHTML(typed, config.letterHTML, { speed: 26, pauseDot: 420, pauseComma: 180 });
 
-      const approxMs = Math.max(1500, config.letterHTML.length * 18);
-      const rewardAt = Math.max(350, approxMs - 150);
+      const TEXT_SPEED = 26; // mantém igual ao speed do typeHTML
+
+      // const approxMs = Math.max(1500, config.letterHTML.length * 18);
+      // const rewardAt = Math.max(350, approxMs - 150);
+      const approxMs = Math.max(2000, config.letterHTML.length * TEXT_SPEED);
+
+      // quando mostrar a foto: 1.2s depois de começar o texto
+      const rewardAt = 2000;
 
       setTimeout(() => {
         final.classList.add("showPhoto");

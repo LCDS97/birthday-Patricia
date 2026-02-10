@@ -569,3 +569,93 @@ h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
 #restartBtn{
   margin-top: 8px;
 }
+
+/* FIX: o bloco da foto precisa ter raio completo pra o overlay ficar no rodapé da imagem */
+#step3 .finalPhotos{
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px !important;  /* ✅ raio completo */
+  height: 400px;                   /* ✅ garante altura real */
+  aspect-ratio: auto !important;   /* ✅ evita conflito com height */
+  background: #000;
+}
+
+/* FIX: overlay no rodapé da imagem */
+#step3 .finalPhotos .mission-overlay{
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  top: auto;
+  z-index: 9999;
+}
+
+
+.finalPhotos{
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+    aspect-ratio: 4 / 5;
+}
+
+
+/* overlay começa invisível, aparece quando eu mando via JS */
+#missionOverlay{
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+
+/* aparece assim que o Step 3 “abre” */
+#final.open #missionOverlay{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#missionOverlay.show{
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+
+.mission-overlay{
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;           /* ✅ rodapé da imagem */
+  top: auto;
+
+  z-index: 999;
+  padding: 12px 14px;
+  border-radius: 14px;
+
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  text-align: center;
+
+  pointer-events: none;
+}
+
+.mission-title{
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 18px;
+  color: #ffe86b;
+  text-shadow:
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0px  3px 8px rgba(0,0,0,.7);
+}
+
+.mission-sub{
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+
+
