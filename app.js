@@ -181,7 +181,7 @@ async function tryPlayMusic() {
   if (!music) return;
   if (localStorage.getItem("musicPlaying") !== "true") return;
 
-  music.volume = 0.4;
+  music.volume = 0.1;
   try {
     await music.play();
     console.log("[MUSIC] tocando ✅");
@@ -354,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (startBtn && noMusicBtn && overlay) {
     startBtn.addEventListener("click", async () => {
       localStorage.setItem("musicPlaying", "true");
-      SFX.play("sfx-heart", { volume: 0.9, restart: true });
+      SFX.play("sfx-heart", { volume: 1.0, restart: true });
 
       await tryPlayMusic();
       showIntro(false);
@@ -362,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     noMusicBtn.addEventListener("click", () => {
       localStorage.setItem("musicPlaying", "false");
-      SFX.play("sfx-heart", { volume: 0.9, restart: true });
+      SFX.play("sfx-heart", { volume: 1.0, restart: true });
 
       showIntro(false);
     });
@@ -888,7 +888,7 @@ function unlockStep2() {
     assembled.classList.add("preReveal");
 
     // toca sfx
-    SFX.play("sfx-unlock", { volume: 0.9, restart: true });
+    SFX.play("sfx-unlock", { volume: 1.0, restart: true });
 
     // flash
     assembled.classList.remove("revealing");
@@ -1089,7 +1089,7 @@ function startFinalPhotoSequence() {
     final.style.display = "block";
     final.classList.add("open");
 
-    SFX.play("sfx-completed", { volume: 0.95, restart: true });
+    SFX.play("sfx-completed", { volume: 1.0, restart: true });
     
     const typed = $("letterTyped");
     const giftRow = $("giftRow");
