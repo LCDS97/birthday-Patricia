@@ -13,6 +13,58 @@ console.log("[APP] app.js carregou ✅");
 const $ = (id) => document.getElementById(id);
 
 // =====================
+// SFX MANAGER
+// =====================
+const SFX = (() => {
+  const cache = new Map();
+
+  function get(id) {
+    if (cache.has(id)) return cache.get(id);
+    const el = document.getElementById(id);
+    if (el) cache.set(id, el);
+    return el;
+  }
+
+  async function play(id, { volume = 0.9, restart = true } = {}) {
+    const a = get(id);
+    if (!a) return;
+
+    try {
+      a.volume = volume;
+      if (restart) a.currentTime = 0;
+      await a.play();
+      console.log("[SFX] play", id, "✅");
+    } catch (e) {
+      // Se travar por política do navegador, só loga.
+      console.warn("[SFX] blocked", id, e);
+    }
+  }
+
+  function stop(id, { reset = true } = {}) {
+    const a = get(id);
+    if (!a) return;
+    try { a.pause(); } catch(e) {}
+    if (reset) a.currentTime = 0;
+  }
+
+  function stopAll({ reset = true } = {}) {
+    cache.forEach((a) => {
+      try { a.pause(); } catch(e) {}
+      if (reset) a.currentTime = 0;
+    });
+  }
+
+  // opcional: “armar” sons pra tocar rápido (warm-up)
+  function warm(ids = []) {
+    ids.forEach((id) => get(id));
+  }
+
+  return { play, stop, stopAll, warm };
+})();
+
+
+
+// =====================
 // CONFIG (SEU CONTEÚDO)
 // =====================
 const config = {
@@ -230,6 +282,7 @@ function render() {
 function restartExperience() {
   // 1) cleanup step2 (timers/onclick)
   window.__step2Cleanup?.();
+  SFX.stopAll();
 
   // 2) parar música
   const music = document.getElementById("bg-music");
@@ -280,12 +333,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (startBtn && noMusicBtn && overlay) {
     startBtn.addEventListener("click", async () => {
       localStorage.setItem("musicPlaying", "true");
+      SFX.play("sfx-heart", { volume: 0.9, restart: true });
+
       await tryPlayMusic();
       showIntro(false);
     });
 
     noMusicBtn.addEventListener("click", () => {
       localStorage.setItem("musicPlaying", "false");
+      SFX.play("sfx-heart", { volume: 0.9, restart: true });
+
       showIntro(false);
     });
   }
