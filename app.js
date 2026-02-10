@@ -377,7 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (startBtn && noMusicBtn && overlay) {
     startBtn.addEventListener("click", async () => {
-      await unlockIOSAudio();
+      // await unlockIOSAudio();
       localStorage.setItem("musicPlaying", "true");
       SFX.play("sfx-heart", { volume: 1.0, restart: true });
 
@@ -386,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     noMusicBtn.addEventListener("click", async () => {
-      await unlockIOSAudio();
+      // await unlockIOSAudio();
       localStorage.setItem("musicPlaying", "false");
       SFX.play("sfx-heart", { volume: 1.0, restart: true });
 
