@@ -9,6 +9,30 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 console.log("[APP] app.js carregou ✅");
 
+
+async function unlockIOSAudio() {
+  const ids = ["bg-music", "sfx-heart", "sfx-unlock", "sfx-completed"];
+
+  for (const id of ids) {
+    const a = document.getElementById(id);
+    if (!a) continue;
+
+    try {
+      a.muted = true;
+      a.volume = 0;
+      await a.play();     // tenta tocar
+      a.pause();          // para
+      a.currentTime = 0;  // reseta
+      a.muted = false;
+      a.volume = 1;
+    } catch (e) {
+      // no iOS pode falhar em alguns, mas já ajuda muito
+      console.warn("[iOS unlock] fail", id, e);
+    }
+  }
+}
+
+
 // Helper
 const $ = (id) => document.getElementById(id);
 
@@ -353,6 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (startBtn && noMusicBtn && overlay) {
     startBtn.addEventListener("click", async () => {
+      await unlockIOSAudio();
       localStorage.setItem("musicPlaying", "true");
       SFX.play("sfx-heart", { volume: 1.0, restart: true });
 
@@ -360,7 +385,8 @@ document.addEventListener("DOMContentLoaded", () => {
       showIntro(false);
     });
 
-    noMusicBtn.addEventListener("click", () => {
+    noMusicBtn.addEventListener("click", async () => {
+      await unlockIOSAudio();
       localStorage.setItem("musicPlaying", "false");
       SFX.play("sfx-heart", { volume: 1.0, restart: true });
 
